@@ -46,8 +46,19 @@ export async function updateProfileAction(_prev: ProfileState | null, formData: 
     create: { userId: session.user.id, ...data, slug },
   });
 
-  // Promouvoir CLIENT → ESCORT si besoin
+  // Promouvoir CLIENT → ESCORT si besoin — toute escorte doit avoir un
+  // numéro (contact fixe de ses annonces), donc pas de promotion sans.
   if (session.user.role === "CLIENT") {
+    const current = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { phone: true },
+    });
+    if (!current?.phone) {
+      return {
+        ok: false,
+        error: "Ajoutez d'abord un numéro de téléphone à votre compte (page \"Devenir escort\").",
+      };
+    }
     await prisma.user.update({
       where: { id: session.user.id },
       data: { role: "ESCORT" },

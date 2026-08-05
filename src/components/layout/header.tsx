@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Search, User, LayoutDashboard, Shield, Heart, MapPin, Flame } from "lucide-react";
+import { Plus, Search, User, LayoutDashboard, Shield, Heart, MapPin, Flame, Settings } from "lucide-react";
 
 import { auth } from "@/auth";
 import { LogoutButton } from "@/components/auth/logout-button";
@@ -132,12 +132,17 @@ export async function Header() {
                       <>
                         <DropdownMenuItem asChild>
                           <Link href="/escort/dashboard">
-                            <LayoutDashboard className="h-4 w-4" /> Mon dashboard
+                            <LayoutDashboard className="h-4 w-4" /> Tableau de bord
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/escort/profil">
+                            <User className="h-4 w-4" /> Mon profil
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link href="/escort/compte">
-                            <User className="h-4 w-4" /> Mon compte
+                            <Settings className="h-4 w-4" /> Mon compte
                           </Link>
                         </DropdownMenuItem>
                       </>
@@ -146,7 +151,7 @@ export async function Header() {
                       <>
                         <DropdownMenuItem asChild>
                           <Link href="/client">
-                            <LayoutDashboard className="h-4 w-4" /> Mon espace
+                            <LayoutDashboard className="h-4 w-4" /> Vue d'ensemble
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
@@ -156,7 +161,7 @@ export async function Header() {
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link href="/client/compte">
-                            <User className="h-4 w-4" /> Mon compte
+                            <Settings className="h-4 w-4" /> Mon compte
                           </Link>
                         </DropdownMenuItem>
                       </>

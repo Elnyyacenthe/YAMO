@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { Loader2, Sparkles } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Loader2, Sparkles, Heart } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -10,14 +11,82 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { registerAction, type AuthState } from "@/lib/actions/auth";
+import { registerAction, clientQuickAuthAction, type AuthState } from "@/lib/actions/auth";
 
-/**
- * Inscription = uniquement pour les ESCORTES.
- * Les CLIENTS n'ont pas besoin de compte : ils consultent les annonces et
- * contactent les escortes directement sur WhatsApp (gratuit).
- */
-export function RegisterForm() {
+/** Inscription CLIENT — juste un pseudo + mot de passe, aucune donnée personnelle. */
+function ClientRegisterForm() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  function submit() {
+    startTransition(async () => {
+      const res = await clientQuickAuthAction({ mode: "signup", username, password, confirmPassword });
+      if (res.ok) {
+        toast.success("Compte créé 🎉");
+        window.location.assign(res.redirectTo ?? "/client");
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
+  return (
+    <Card className="border-primary/20">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 font-display text-2xl">
+          <Heart className="h-6 w-6 text-primary" /> Créer mon compte
+        </CardTitle>
+        <CardDescription>
+          Nécessaire pour ajouter des favoris, signaler une annonce et contacter le service client.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="c-username">Pseudo</Label>
+          <Input id="c-username" value={username} onChange={(e) => setUsername(e.target.value)} required minLength={2} disabled={pending} />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="c-password">Mot de passe</Label>
+            <Input id="c-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} disabled={pending} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="c-confirm">Confirmer</Label>
+            <Input id="c-confirm" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8} disabled={pending} />
+          </div>
+        </div>
+
+        <Button
+          onClick={submit}
+          disabled={pending || !username.trim() || !password || !confirmPassword}
+          className="w-full"
+          size="lg"
+        >
+          {pending && <Loader2 className="h-4 w-4 animate-spin" />}
+          Créer mon compte
+        </Button>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Déjà un compte ?{" "}
+          <Link href="/connexion" className="text-primary hover:underline">
+            Se connecter
+          </Link>
+        </p>
+        <p className="text-center text-xs text-muted-foreground">
+          <strong>Escort</strong> ?{" "}
+          <Link href="/inscription" className="text-primary hover:underline">
+            Créez votre compte escort ici
+          </Link>.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Inscription ESCORT — flux complet (email, téléphone, abonnement). */
+function EscortRegisterForm() {
   const [state, formAction, pending] = useActionState<AuthState | null, FormData>(
     registerAction,
     null,
@@ -46,7 +115,6 @@ export function RegisterForm() {
       </CardHeader>
       <CardContent>
         <form action={formAction} className="space-y-4">
-          {/* Le rôle est toujours ESCORT */}
           <input type="hidden" name="role" value="ESCORT" />
           <input type="hidden" name="tier" value="STANDARD" />
 
@@ -115,13 +183,20 @@ export function RegisterForm() {
             </Link>
           </p>
           <p className="text-center text-xs text-muted-foreground">
-            <strong>Client</strong> ? Vous n'avez pas besoin de compte —{" "}
+            <strong>Client</strong> ? Vous n'avez pas besoin de compte pour parcourir les annonces —{" "}
             <Link href="/recherche" className="text-primary hover:underline">
-              parcourez les annonces directement
-            </Link>.
+              cherchez directement
+            </Link>{" "}
+            (un compte léger est proposé si vous voulez des favoris ou contacter le support).
           </p>
         </form>
       </CardContent>
     </Card>
   );
+}
+
+export function RegisterForm() {
+  const searchParams = useSearchParams();
+  const isClient = searchParams.get("role") === "CLIENT";
+  return isClient ? <ClientRegisterForm /> : <EscortRegisterForm />;
 }

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: `Conditions Générales d'Utilisation de la plateforme ${SITE_NAME}.`,
 };
 
-const LAST_UPDATE = "29 mai 2026";
+const LAST_UPDATE = "5 août 2026";
 
 // =====================================================================
 // PRIMITIVES UI
@@ -367,7 +367,7 @@ export default function TermsPage() {
               </UL>
               <Callout variant="info" title="Vous avez un doute ?">
                 Signalez immédiatement via le bouton « Signaler » ou par email à{" "}
-                <strong>abuse@{SITE_NAME.toLowerCase()}.cm</strong>. Le signalement est anonyme,
+                <strong>abuse@{SITE_NAME.toLowerCase()}.com</strong>. Le signalement est anonyme,
                 gratuit et traité en moins de 4 heures ouvrées.
               </Callout>
             </Section>
@@ -390,7 +390,7 @@ export default function TermsPage() {
               </UL>
               <Callout variant="info" title="Si vous êtes victime ou témoin">
                 Appelez gratuitement le <strong>1500</strong> (numéro vert Cameroun), ou écrivez à{" "}
-                abuse@{SITE_NAME.toLowerCase()}.cm. Votre démarche reste strictement anonyme.
+                abuse@{SITE_NAME.toLowerCase()}.com. Votre démarche reste strictement anonyme.
               </Callout>
             </Section>
 
@@ -445,7 +445,7 @@ export default function TermsPage() {
                 <LI>Examen exclusif par l'équipe de modération sous 24-48h ouvrées.</LI>
                 <LI>Le numéro de pièce <strong>n'est jamais stocké en clair</strong> — seul un hachage SHA-256 est conservé pour détecter des réinscriptions frauduleuses.</LI>
                 <LI>Documents originaux supprimés après validation, sauf litige ou réquisition légale (conservation 5 ans max).</LI>
-                <LI>Suppression à tout moment sur demande à privacy@{SITE_NAME.toLowerCase()}.cm.</LI>
+                <LI>Suppression à tout moment sur demande à privacy@{SITE_NAME.toLowerCase()}.com.</LI>
               </UL>
               <Callout variant="danger">
                 Toute pièce manifestement falsifiée, retouchée, prêtée ou ne correspondant pas au
@@ -628,27 +628,86 @@ export default function TermsPage() {
             </Section>
 
             <Section num="17" id="interdits" tone="danger" title="Comportements strictement interdits">
-              <P>Constituent des violations graves entraînant le bannissement définitif :</P>
+              <Callout variant="danger" title="S'applique identiquement à tout Utilisateur">
+                Les interdictions et sanctions du présent article s'appliquent{" "}
+                <strong>sans aucune distinction entre Client et Annonceur/Escort</strong>. Le rôle du
+                compte ne constitue jamais une circonstance atténuante.
+              </Callout>
+
+              <SubTitle>Comportements généraux prohibés</SubTitle>
               <UL>
                 <LI>Toute infraction visant les articles 3 (mineurs) et 4 (traite).</LI>
                 <LI>Faux profil, usurpation d'identité, vol de photos.</LI>
                 <LI>Spam, harcèlement, menaces, chantage, diffamation.</LI>
-                <LI>Arnaque financière (paiement avant rencontre, fausses cartes, ingénierie sociale).</LI>
                 <LI>Mise en relation pour actes illégaux (drogues, armes, contrefaçon).</LI>
                 <LI>Comptes multiples ou contournement d'un bannissement.</LI>
-                <LI>Scraping, aspiration de données, automatisation non autorisée.</LI>
-                <LI>Exploitation de failles de sécurité (à signaler à security@{SITE_NAME.toLowerCase()}.cm).</LI>
-                <LI>Injection de scripts, XSS, élévation de privilèges.</LI>
                 <LI>Publicité non autorisée pour un site tiers ou service concurrent.</LI>
                 <LI>Violation des CGU de K-Pay, UploadThing ou de tout partenaire technique.</LI>
               </UL>
+
+              <SubTitle>Piraterie et atteintes à la sécurité informatique</SubTitle>
+              <P>
+                Sont strictement interdits, qu'ils visent {SITE_NAME}, ses partenaires techniques ou
+                un autre Utilisateur :
+              </P>
+              <UL>
+                <LI>Accès ou tentative d'accès non autorisé à un compte, une base de données ou une infrastructure (piratage, phishing, vol d'identifiants).</LI>
+                <LI>Exploitation d'une faille de sécurité à des fins autres que le signalement responsable (à déclarer exclusivement à security@{SITE_NAME.toLowerCase()}.com).</LI>
+                <LI>Injection de scripts, XSS, CSRF, élévation de privilèges, contournement des contrôles d'authentification.</LI>
+                <LI>Scraping, aspiration de données, automatisation, bots ou usage non autorisé de l'API.</LI>
+                <LI>Déni de service (DoS/DDoS) ou toute action visant à dégrader la disponibilité du Site.</LI>
+                <LI>Détournement de la messagerie support (pièces jointes) pour héberger ou diffuser des fichiers malveillants.</LI>
+              </UL>
+              <Callout variant="danger" title="Sanction">
+                Bannissement définitif immédiat du compte, sans préavis ni remboursement, conservation
+                des preuves techniques (logs, IP, empreintes) et signalement systématique à la{" "}
+                <strong>Police judiciaire camerounaise</strong> et, le cas échéant, à INTERPOL. Des
+                poursuites civiles et pénales pourront être engagées sur le fondement de la loi
+                camerounaise n°2010/012 relative à la cybersécurité et la cybercriminalité.
+              </Callout>
+
+              <SubTitle>Fraude, arnaque et abus du système de paiement</SubTitle>
+              <P>
+                L'abonnement Annonceur et les options associées se paient par virement Mobile Money
+                direct, déclaré ensuite par l'Utilisateur puis vérifié manuellement par l'équipe
+                {SITE_NAME} avant activation. Constituent une fraude caractérisée :
+              </P>
+              <UL>
+                <LI>Déclarer un paiement fictif, un montant erroné ou une référence de transaction falsifiée.</LI>
+                <LI>Fournir une fausse preuve (capture d'écran modifiée, montage, document trafiqué) à l'équipe support ou dans une déclaration de paiement.</LI>
+                <LI>Ingénierie sociale visant à obtenir une activation, un remboursement ou un déblocage indu.</LI>
+                <LI>Arnaque financière envers un autre Utilisateur (paiement exigé avant rencontre, fausses cartes, chantage).</LI>
+                <LI>Contestation frauduleuse (chargeback) d'un paiement Mobile Money effectivement dû.</LI>
+              </UL>
+              <Callout variant="danger" title="Sanction">
+                Rejet immédiat de la déclaration, bannissement définitif du compte (annonce ET compte,
+                cf. article 19), perte de tout abonnement ou option en cours <strong>sans
+                remboursement</strong>, et signalement à l'<strong>ANIF</strong> (Agence Nationale
+                d'Investigation Financière) en cas de fraude financière avérée ou répétée.
+              </Callout>
+
+              <SubTitle>Signalements abusifs</SubTitle>
+              <P>
+                Le signalement (article 18) est un outil de protection de la communauté, pas une arme
+                personnelle. Sont interdits :
+              </P>
+              <UL>
+                <LI>Signalement mensonger, diffamatoire ou déposé dans l'intention de nuire à un Annonceur concurrent ou à un tiers.</LI>
+                <LI>Signalements répétés et manifestement infondés visant à harceler un même compte.</LI>
+                <LI>Fourniture de fausses preuves à l'appui d'un signalement.</LI>
+              </UL>
+              <Callout variant="warning" title="Sanction">
+                Avertissement au premier signalement abusif avéré ; suspension temporaire en cas de
+                récidive ; bannissement définitif en cas d'usage systématique ou manifestement
+                malveillant du dispositif de signalement.
+              </Callout>
             </Section>
 
             <Section num="18" id="signalement" title="Signalements et coopération avec les autorités">
               <P>
                 Tout Utilisateur peut signaler une Annonce ou un comportement abusif via le bouton
                 « Signaler » présent sur chaque fiche, ou par email anonyme à{" "}
-                <strong>abuse@{SITE_NAME.toLowerCase()}.cm</strong>.
+                <strong>abuse@{SITE_NAME.toLowerCase()}.com</strong>.
               </P>
               <SubTitle>Procédure interne</SubTitle>
               <UL>
@@ -670,14 +729,39 @@ export default function TermsPage() {
             </Section>
 
             <Section num="19" id="ban" tone="danger" title="Suspension, bannissement et bannissement définitif d'identité">
+              <Callout variant="danger" title="Sanctions identiques pour tous">
+                Les mesures décrites ci-dessous s'appliquent <strong>de la même manière à un compte
+                Client et à un compte Annonceur/Escort</strong>. Aucun statut, aucun abonnement en
+                cours ni aucune ancienneté du compte n'exonère un Utilisateur d'une sanction.
+              </Callout>
+
               <SubTitle>Mesures graduées</SubTitle>
               <UL>
                 <LI><strong>Avertissement</strong> : infraction mineure non récidivante.</LI>
-                <LI><strong>Retrait d'Annonce</strong> : photo non conforme, description trompeuse.</LI>
+                <LI><strong>Retrait d'Annonce</strong> : photo non conforme, description trompeuse — le compte reste actif.</LI>
                 <LI><strong>Suspension temporaire</strong> (1 à 90 jours) : récidive, signalements répétés.</LI>
-                <LI><strong>Bannissement définitif du compte</strong> : violation grave ou récidive de suspension.</LI>
+                <LI><strong>Bannissement définitif du compte</strong> : violation grave (piraterie, fraude au paiement, signalement abusif systématique) ou récidive de suspension.</LI>
                 <LI><strong>Bannissement définitif de l'identité</strong> : crime, mineur, traite, fraude organisée.</LI>
               </UL>
+
+              <SubTitle>Le compte est banni, pas seulement l'Annonce</SubTitle>
+              <P>
+                Lorsqu'un signalement s'avère fondé après vérification (échanges et preuves via la
+                messagerie support, article 18), la sanction porte sur <strong>l'intégralité du
+                compte de son auteur</strong>, et pas seulement sur l'Annonce visée : toutes les
+                Annonces actives ou en attente de l'Annonceur concerné basculent automatiquement en
+                statut banni, en plus du compte lui-même.
+              </P>
+
+              <SubTitle>Recours pour un compte Annonceur/Escort banni</SubTitle>
+              <P>
+                Un compte Annonceur/Escort banni reste accessible en connexion, mais uniquement pour
+                consulter le motif du bannissement et échanger avec l'équipe {SITE_NAME} via la
+                messagerie support — aucune autre fonctionnalité (Annonces, abonnement, profil)
+                n'est accessible tant que le compte reste banni. C'est l'unique canal de contestation
+                ou de justification.
+              </P>
+
               <SubTitle>Mécanisme technique du ban d'identité</SubTitle>
               <P>
                 Lors d'une infraction extrêmement grave confirmée, {SITE_NAME} peut inscrire le
@@ -687,7 +771,7 @@ export default function TermsPage() {
                 <strong>Toute tentative ultérieure de réinscription avec la même pièce d'identité
                 sera automatiquement bloquée</strong>, même après suppression du compte d'origine, de
                 manière définitive. Recours possible par lettre motivée à{" "}
-                legal@{SITE_NAME.toLowerCase()}.cm.
+                legal@{SITE_NAME.toLowerCase()}.com.
               </Callout>
             </Section>
 

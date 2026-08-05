@@ -35,9 +35,11 @@ const SERVICES = [
 
 interface Props {
   cities: { id: string; name: string }[];
+  /** Numéro du compte (inscription) — figé, non modifiable depuis ce formulaire. */
+  accountPhone: string;
 }
 
-export function AdForm({ cities }: Props) {
+export function AdForm({ cities, accountPhone }: Props) {
   const router = useRouter();
   const [photos, setPhotos] = useState<string[]>([]);
   const [videos, setVideos] = useState<string[]>([]);
@@ -226,23 +228,33 @@ export function AdForm({ cities }: Props) {
       <Card>
         <CardContent className="space-y-4 p-6">
           <h2 className="font-display text-xl font-bold">📞 Contact</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="whatsappPhone">WhatsApp *</Label>
-              <Input
-                id="whatsappPhone"
-                name="whatsappPhone"
-                placeholder="+237 6XX XX XX XX"
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                Le numéro sera partiellement masqué sur l'annonce.
-              </p>
+
+          <div className="space-y-2">
+            <Label>Numéro de contact</Label>
+            <Input value={accountPhone} disabled className="font-mono" />
+            <p className="text-xs text-muted-foreground">
+              Le numéro de votre compte, partiellement masqué sur l'annonce. Il ne peut pas être
+              changé annonce par annonce — contactez le support pour le modifier.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Moyens de contact (au moins un requis)</Label>
+            <div className="flex flex-wrap gap-4">
+              <label className="flex items-center gap-2">
+                <Checkbox name="whatsappEnabled" defaultChecked />
+                <span className="text-sm">WhatsApp</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <Checkbox name="telegramEnabled" />
+                <span className="text-sm">Telegram</span>
+              </label>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="callPhone">Appel direct (optionnel)</Label>
-              <Input id="callPhone" name="callPhone" placeholder="+237 6XX XX XX XX" />
-            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="callPhone">Appel direct (optionnel, numéro différent si besoin)</Label>
+            <Input id="callPhone" name="callPhone" placeholder="+237 6XX XX XX XX" />
           </div>
         </CardContent>
       </Card>

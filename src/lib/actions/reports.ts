@@ -15,7 +15,9 @@ const reportSchema = z.object({
 
 export async function reportAdAction(input: z.infer<typeof reportSchema>) {
   const session = await auth();
-  const ip = (await headers()).get("x-forwarded-for") ?? session?.user?.id ?? "anon";
+  if (!session?.user) return { ok: false as const, error: "Connectez-vous pour signaler une annonce" };
+
+  const ip = (await headers()).get("x-forwarded-for") ?? session.user.id;
   const rl = await rateLimit(`report:${ip}`, RL.report);
   if (!rl.success) return { ok: false as const, error: "Trop de signalements. Réessayez plus tard." };
 
@@ -28,7 +30,7 @@ export async function reportAdAction(input: z.infer<typeof reportSchema>) {
   await prisma.report.create({
     data: {
       adId: parsed.data.adId,
-      reporterId: session?.user?.id,
+      reporterId: session.user.id,
       reportedUserId: ad.ownerId,
       reason: parsed.data.reason,
       details: parsed.data.details,

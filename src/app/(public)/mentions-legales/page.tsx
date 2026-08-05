@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SITE_NAME } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Mentions légales" };
@@ -11,11 +12,16 @@ export default function LegalPage() {
 
         <h2>1. Éditeur du site</h2>
         <p>
-          Le site <strong>{SITE_NAME}</strong> est édité par [Nom de la société], [forme juridique], au capital
-          de [X] FCFA, immatriculée au RCCM de Douala sous le numéro [X], dont le siège social est situé à [adresse], Cameroun.
+          Le site <strong>{SITE_NAME}</strong> est actuellement exploité en phase de lancement, en amont de
+          son immatriculation formelle (RCCM) au Cameroun. Les informations légales complètes de la société
+          éditrice (raison sociale, forme juridique, capital social, numéro RCCM, siège social, directeur de
+          la publication) seront publiées sur cette page dès l'immatriculation finalisée.
         </p>
-        <p>Directeur de la publication : [Nom du responsable].</p>
-        <p>Email : contact@{SITE_NAME.toLowerCase()}.cm</p>
+        <p>
+          Jusque-là, toute question relative à l'identité de l'exploitant peut être adressée au contact
+          ci-dessous.
+        </p>
+        <p>Email : contact@{SITE_NAME.toLowerCase()}.com</p>
 
         <h2>2. Hébergement</h2>
         <p>Le site est hébergé par Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, USA.</p>
@@ -31,7 +37,9 @@ export default function LegalPage() {
         <p>
           {SITE_NAME} est une plateforme de mise en relation entre adultes consentants. Les annonceurs sont seuls
           responsables du contenu de leurs annonces et certifient sur l'honneur être majeurs et consentants.
-          {SITE_NAME} agit en qualité d'hébergeur au sens de la LCEN.
+          {SITE_NAME} agit en qualité d'hébergeur technique au sens de la loi camerounaise n°2010/012 du 21
+          décembre 2010 relative à la cybersécurité et à la cybercriminalité (voir aussi{" "}
+          <Link href="/cgu#hebergeur" className="text-primary hover:underline">CGU, article 5</Link>).
         </p>
 
         <h2>5. Modération et signalement</h2>
@@ -47,7 +55,7 @@ export default function LegalPage() {
         </p>
 
         <h2>7. Contact</h2>
-        <p>Pour toute question : contact@{SITE_NAME.toLowerCase()}.cm</p>
+        <p>Pour toute question : contact@{SITE_NAME.toLowerCase()}.com</p>
       </article>
     </div>
   );

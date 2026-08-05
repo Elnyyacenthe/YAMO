@@ -287,7 +287,7 @@ export default async function EscortProfilePage() {
           </div>
           <p className="text-xs text-muted-foreground">
             Pour modifier votre email ou mot de passe, contactez le{" "}
-            <Link href="/support" className="text-primary hover:underline">service client</Link>.
+            <Link href="/escort/support" className="text-primary hover:underline">service client</Link>.
           </p>
         </CardContent>
       </Card>

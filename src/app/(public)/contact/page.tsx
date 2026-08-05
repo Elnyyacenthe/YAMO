@@ -24,8 +24,8 @@ export default function ContactPage() {
                 <p className="text-sm text-muted-foreground">
                   Questions, partenariats, demandes commerciales
                 </p>
-                <a href={`mailto:contact@${SITE_NAME.toLowerCase()}.cm`} className="text-primary hover:underline">
-                  contact@{SITE_NAME.toLowerCase()}.cm
+                <a href={`mailto:contact@${SITE_NAME.toLowerCase()}.com`} className="text-primary hover:underline">
+                  contact@{SITE_NAME.toLowerCase()}.com
                 </a>
               </div>
             </CardContent>
@@ -39,8 +39,8 @@ export default function ContactPage() {
                 <p className="text-sm text-muted-foreground">
                   Contenu illégal, mineur suspecté, arnaque
                 </p>
-                <a href={`mailto:abuse@${SITE_NAME.toLowerCase()}.cm`} className="text-primary hover:underline">
-                  abuse@{SITE_NAME.toLowerCase()}.cm
+                <a href={`mailto:abuse@${SITE_NAME.toLowerCase()}.com`} className="text-primary hover:underline">
+                  abuse@{SITE_NAME.toLowerCase()}.com
                 </a>
               </div>
             </CardContent>
@@ -52,8 +52,8 @@ export default function ContactPage() {
               <div>
                 <h3 className="font-semibold">Support escorts (Premium / VIP)</h3>
                 <p className="text-sm text-muted-foreground">Activation de boost, paiements</p>
-                <a href={`mailto:support@${SITE_NAME.toLowerCase()}.cm`} className="text-primary hover:underline">
-                  support@{SITE_NAME.toLowerCase()}.cm
+                <a href={`mailto:support@${SITE_NAME.toLowerCase()}.com`} className="text-primary hover:underline">
+                  support@{SITE_NAME.toLowerCase()}.com
                 </a>
               </div>
             </CardContent>

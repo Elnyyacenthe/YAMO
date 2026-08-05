@@ -1,4 +1,5 @@
 import { Eye, MessageCircle, ListChecks, TrendingUp } from "lucide-react";
+import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -7,7 +8,8 @@ import { StatCard } from "@/components/dashboard/stat-card";
 
 export default async function StatsPage() {
   const session = await auth();
-  const userId = session!.user.id;
+  if (!session?.user) redirect("/connexion?callbackUrl=/escort/statistiques");
+  const userId = session.user.id;
 
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 86_400_000);

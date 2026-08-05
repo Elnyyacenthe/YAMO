@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,11 +8,12 @@ import { ProfileForm } from "./_components/profile-form";
 
 export default async function ProfilePage() {
   const session = await auth();
+  if (!session?.user) redirect("/connexion?callbackUrl=/escort/profil");
   const profile = await prisma.escortProfile.findUnique({
-    where: { userId: session!.user.id },
+    where: { userId: session.user.id },
   });
   const user = await prisma.user.findUnique({
-    where: { id: session!.user.id },
+    where: { id: session.user.id },
     select: { email: true, phone: true, name: true },
   });
 

@@ -16,7 +16,7 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const role = auth?.user?.role;
 
-      // Ce projet (yamo public) contient :
+      // Ce projet (site public Affinité) contient :
       //   - les pages marketing publiques
       //   - /admin/* (interne, ADMIN/MODERATOR uniquement)
       //   - /(auth)/* (connexion, inscription)

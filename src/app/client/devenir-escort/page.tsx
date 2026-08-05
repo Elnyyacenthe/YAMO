@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Crown, Star, BadgeCheck, Wallet, BarChart3 } from "lucide-react";
+import { Sparkles, Star, BadgeCheck, BarChart3 } from "lucide-react";
 
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { BecomeEscortForm } from "./_form";
 
@@ -11,8 +12,6 @@ const PERKS = [
   { icon: BarChart3, title: "Dashboard & stats", text: "Vues, clics WhatsApp, taux de conversion en temps réel." },
   { icon: Star, title: "Boost Premium / VIP", text: "Mise en avant ville, badge doré, photos illimitées." },
   { icon: BadgeCheck, title: "Badge Vérifiée", text: "Renforcez la confiance des clients avec une vérification ID." },
-  { icon: Wallet, title: "Wallet & retraits", text: "Gérez vos revenus, retirez en MoMo / Orange Money." },
-  { icon: Crown, title: "Parrainage", text: "Gagnez des bonus en parrainant d'autres escorts." },
 ];
 
 export default async function BecomeEscortPage() {
@@ -24,10 +23,15 @@ export default async function BecomeEscortPage() {
   // ADMIN/MODERATOR : renvoyés vers l'interface admin externe (affinité.com/admin)
   if (session.user.role === "ADMIN" || session.user.role === "MODERATOR") {
     const url =
-      process.env.NEXT_PUBLIC_YAMO_ADMIN_URL ??
-      `${process.env.NEXT_PUBLIC_YAMO_URL ?? "https://affinité.com"}/admin`;
+      process.env.NEXT_PUBLIC_AFFINITE_ADMIN_URL ??
+      `${process.env.NEXT_PUBLIC_AFFINITE_URL ?? "https://affinité.com"}/admin`;
     redirect(url);
   }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { phone: true },
+  });
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -40,8 +44,8 @@ export default async function BecomeEscortPage() {
           Devenez <span className="gradient-text">Escort</span> sur Affinité
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-          Votre compte client va être converti en compte escort. Vous gardez vos données, votre solde
-          wallet et votre code parrainage. Vous accédez en plus à toutes les fonctionnalités escort.
+          Votre compte client va être converti en compte escort. Vous gardez vos favoris et votre
+          historique. Vous accédez en plus à toutes les fonctionnalités escort.
         </p>
       </header>
 
@@ -63,7 +67,7 @@ export default async function BecomeEscortPage() {
       </div>
 
       {/* Formulaire d'engagement */}
-      <BecomeEscortForm />
+      <BecomeEscortForm currentPhone={user?.phone ?? null} />
 
       <p className="text-center text-xs text-muted-foreground">
         En cas de problème, contactez{" "}

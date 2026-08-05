@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { Plus, Eye, MessageCircle, Edit, Pause, Play, Trash2, Crown } from "lucide-react";
 
 import { auth } from "@/auth";
@@ -24,16 +25,17 @@ const STATUS_LABEL: Record<string, { label: string; variant: "secondary" | "succ
 
 export default async function MyAdsPage() {
   const session = await auth();
+  if (!session?.user) redirect("/connexion?callbackUrl=/escort/annonces");
   const [ads, user, bumpPrice, stickyPrice, premiumPrice, vipPrice, diamondPrice, premiumDays, vipDays, diamondDays] = await Promise.all([
     prisma.ad.findMany({
-      where: { ownerId: session!.user.id },
+      where: { ownerId: session.user.id },
       include: {
         city: true,
         media: { take: 1, orderBy: { position: "asc" } },
       },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.user.findUnique({ where: { id: session!.user.id }, select: { phone: true } }),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { phone: true } }),
     getSettingNumber("pricing.bump.amount", 500),
     getSettingNumber("pricing.sticky.amount", 2000),
     getSettingNumber("pricing.premium.amount", 5000),

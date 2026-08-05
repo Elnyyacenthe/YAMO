@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Heart, Search, Sparkles, MapPin } from "lucide-react";
 
 import { auth } from "@/auth";
@@ -11,7 +12,8 @@ import { AdGrid } from "@/components/ads/ad-grid";
 
 export default async function ClientDashboardPage() {
   const session = await auth();
-  const userId = session!.user.id;
+  if (!session?.user) redirect("/connexion?callbackUrl=/client");
+  const userId = session.user.id;
 
   const [user, recentFavorites, popularAds] = await Promise.all([
     prisma.user.findUnique({

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, Phone, ShieldAlert, Loader2 } from "lucide-react";
+import { MessageCircle, Send, Phone, ShieldAlert, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,50 +9,76 @@ import { trackWhatsAppClick } from "@/lib/actions/ads";
 
 interface Props {
   adId: string;
-  /** Numéro WhatsApp complet (affiché directement, contact gratuit). */
+  /** Numéro de contact (celui du compte escort — WhatsApp et/ou Telegram). */
   whatsappPhone: string;
+  whatsappEnabled: boolean;
+  telegramEnabled: boolean;
   /** Numéro d'appel (optionnel). */
   callPhone?: string | null;
   adTitle: string;
 }
 
-export function ContactCard({ adId, whatsappPhone, callPhone, adTitle }: Props) {
+export function ContactCard({
+  adId,
+  whatsappPhone,
+  whatsappEnabled,
+  telegramEnabled,
+  callPhone,
+  adTitle,
+}: Props) {
   const [opening, setOpening] = useState(false);
+  const cleanPhone = whatsappPhone.replace(/\s/g, "").replace(/^\+/, "");
 
   function openWhatsApp() {
     setOpening(true);
     // Track non-bloquant (fire & forget)
     trackWhatsAppClick(adId).catch(() => null);
 
-    const cleanWa = whatsappPhone.replace(/\s/g, "").replace(/^\+/, "");
-    const waUrl = `https://wa.me/${cleanWa}?text=${encodeURIComponent(
+    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
       `Bonjour, je vous écris au sujet de votre annonce "${adTitle}" sur Affinité.`,
     )}`;
     window.open(waUrl, "_blank", "noopener,noreferrer");
     setTimeout(() => setOpening(false), 800);
   }
 
+  function openTelegram() {
+    window.open(`https://t.me/+${cleanPhone}`, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <Card className="border-primary/30">
       <CardContent className="space-y-4 p-6">
         <div>
-          <p className="mb-1 text-xs uppercase text-muted-foreground">WhatsApp</p>
+          <p className="mb-1 text-xs uppercase text-muted-foreground">Contact</p>
           <p className="select-all font-mono text-lg">{whatsappPhone}</p>
         </div>
 
-        <Button
-          onClick={openWhatsApp}
-          disabled={opening}
-          size="lg"
-          className="w-full bg-emerald-500 text-white hover:bg-emerald-600"
-        >
-          {opening ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <MessageCircle className="h-5 w-5" />
-          )}
-          Contacter sur WhatsApp
-        </Button>
+        {whatsappEnabled && (
+          <Button
+            onClick={openWhatsApp}
+            disabled={opening}
+            size="lg"
+            className="w-full bg-emerald-500 text-white hover:bg-emerald-600"
+          >
+            {opening ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <MessageCircle className="h-5 w-5" />
+            )}
+            Contacter sur WhatsApp
+          </Button>
+        )}
+
+        {telegramEnabled && (
+          <Button
+            onClick={openTelegram}
+            size="lg"
+            className="w-full bg-sky-500 text-white hover:bg-sky-600"
+          >
+            <Send className="h-5 w-5" />
+            Contacter sur Telegram
+          </Button>
+        )}
 
         {callPhone && (
           <Button asChild variant="outline" size="lg" className="w-full">

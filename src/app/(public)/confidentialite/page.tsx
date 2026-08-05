@@ -39,7 +39,7 @@ export default function PrivacyPage() {
         <p>
           Conformément au RGPD et à la loi camerounaise n°2010/012 sur la cybersécurité, vous disposez d'un droit
           d'accès, de rectification, de suppression, de portabilité et d'opposition. Exercez-les en écrivant à{" "}
-          <strong>privacy@{SITE_NAME.toLowerCase()}.cm</strong>.
+          <strong>privacy@{SITE_NAME.toLowerCase()}.com</strong>.
         </p>
 
         <h2>5. Cookies</h2>
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
         <h2>6. Sécurité</h2>
         <p>
           Les mots de passe sont hachés (bcrypt), les communications chiffrées (HTTPS/TLS), et les uploads sont
-          scannés. Aucun système n'est infaillible : signalez toute faille à <strong>security@{SITE_NAME.toLowerCase()}.cm</strong>.
+          scannés. Aucun système n'est infaillible : signalez toute faille à <strong>security@{SITE_NAME.toLowerCase()}.com</strong>.
         </p>
 
         <h2>7. Partage avec des tiers</h2>

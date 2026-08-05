@@ -16,7 +16,7 @@ export function OrganizationJsonLd() {
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",
-      url: `${SITE_URL}/support`,
+      url: `${SITE_URL}/contact`,
       availableLanguage: "French",
     },
   };

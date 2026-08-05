@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { slugify } from "@/lib/utils";
+import { PHONE_REGEX } from "@/lib/validations/auth";
 
 export type BecomeEscortState =
   | { ok: true }
@@ -19,6 +19,9 @@ export type BecomeEscortState =
  *  - Doit être connecté
  *  - Doit être CLIENT (pas ADMIN/MODERATOR, pas déjà ESCORT)
  *  - Doit avoir accepté les CGU + l'âge 18+
+ *  - Doit avoir (ou fournir) un numéro de téléphone unique : c'est le
+ *    contact WhatsApp/Telegram fixe de ses futures annonces, aucune escorte
+ *    ne peut publier sans numéro (cf. createAdAction dans lib/actions/ads.ts).
  */
 export async function becomeEscortAction(
   _prev: BecomeEscortState | null,
@@ -54,11 +57,30 @@ export async function becomeEscortAction(
     return { ok: false, error: "Compte banni" };
   }
 
+  // Toute escorte doit avoir un numéro. Si le compte (créé via pseudo/mot de
+  // passe par ex.) n'en a pas encore, on l'exige et le vérifie ici.
+  let phone = user.phone;
+  if (!phone) {
+    const raw = String(formData.get("phone") ?? "").trim();
+    if (!PHONE_REGEX.test(raw.replace(/\s/g, ""))) {
+      return { ok: false, error: "Numéro camerounais invalide (ex : +237 6XX XX XX XX)" };
+    }
+    phone = raw.replace(/\s/g, "").replace(/^237/, "+237");
+
+    const existing = await prisma.user.findFirst({
+      where: { phone, id: { not: user.id } },
+      select: { id: true },
+    });
+    if (existing) {
+      return { ok: false, error: "Ce numéro est déjà utilisé par un autre compte" };
+    }
+  }
+
   // Promotion + création du profil si absent
   await prisma.$transaction(async (tx) => {
     await tx.user.update({
       where: { id: user.id },
-      data: { role: "ESCORT" },
+      data: { role: "ESCORT", phone },
     });
 
     if (!user.escortProfile) {
@@ -67,7 +89,7 @@ export async function becomeEscortAction(
           userId: user.id,
           displayName: user.name ?? "Escort",
           slug: `${slugify(user.name ?? "escort")}-${user.id.slice(0, 6)}`,
-          age: 18, // pourra être édité par l'escort
+          age: 18, // pourra être édité par l'escorte
         },
       });
     }

@@ -3,8 +3,8 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { KpayPayModal } from "@/components/kpay/kpay-pay-modal";
-import { initiateEscortSubscriptionAction } from "@/lib/actions/payments";
+import { ManualPayModal } from "@/components/payments/manual-pay-modal";
+import { declareManualSubscriptionPaymentAction } from "@/lib/actions/manual-payment";
 
 const DURATIONS = [
   { months: 1 as const, label: "1 mois", discount: 0 },
@@ -12,14 +12,23 @@ const DURATIONS = [
   { months: 12 as const, label: "1 an", discount: 15 },
 ];
 
+interface PaymentInfo {
+  recipientName: string;
+  mtnNumber: string;
+  orangeNumber: string;
+  instructions: string;
+}
+
 export function SubscribeButtons({
   tier,
   monthly,
   defaultPhone,
+  paymentInfo,
 }: {
   tier: "STANDARD" | "PREMIUM" | "VIP";
   monthly: number;
   defaultPhone?: string;
+  paymentInfo: PaymentInfo;
 }) {
   const [months, setMonths] = useState<1 | 3 | 12>(1);
   const baseTotal = monthly * months;
@@ -55,7 +64,7 @@ export function SubscribeButtons({
         </p>
       )}
 
-      <KpayPayModal
+      <ManualPayModal
         trigger={
           <Button className="w-full" size="sm">
             {selected.discount > 0 ? (
@@ -73,12 +82,18 @@ export function SubscribeButtons({
         title={`Abonnement ${tier} ${months} mois`}
         description={
           selected.discount > 0
-            ? `Réduction ${selected.discount}% appliquée (${saved.toLocaleString("fr-FR")} FCFA économisés). Activation immédiate.`
-            : `Activation immédiate après confirmation du paiement.`
+            ? `Réduction ${selected.discount}% appliquée (${saved.toLocaleString("fr-FR")} FCFA économisés). Activation après vérification admin.`
+            : `Activation après vérification admin.`
         }
         amount={total}
         defaultPhone={defaultPhone}
-        initiate={(phone) => initiateEscortSubscriptionAction({ tier, months, phone })}
+        recipientName={paymentInfo.recipientName}
+        mtnNumber={paymentInfo.mtnNumber}
+        orangeNumber={paymentInfo.orangeNumber}
+        instructions={paymentInfo.instructions}
+        declare={({ senderPhone, reference }) =>
+          declareManualSubscriptionPaymentAction({ tier, months, senderPhone, reference })
+        }
       />
     </div>
   );

@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
-import { CreditCard, Check, Crown, Star, Sparkles, AlertTriangle } from "lucide-react";
+import { CreditCard, Check, Crown, Star, Sparkles, AlertTriangle, Clock } from "lucide-react";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getSettingNumber } from "@/lib/settings";
+import { getSettingNumber, getSettingString } from "@/lib/settings";
 import { getEscortSubscriptionStatus } from "@/lib/escort-subscription";
 import { SubscribeButtons } from "./_buttons";
 
@@ -13,17 +13,33 @@ export default async function EscortAbonnementPage() {
   const session = await auth();
   if (!session?.user) redirect("/connexion?callbackUrl=/escort/abonnement");
 
-  const [status, user, stdPrice, premPrice, vipPrice, days] = await Promise.all([
-    getEscortSubscriptionStatus(session.user.id),
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { phone: true },
-    }),
-    getSettingNumber("pricing.escortSubscription.standard.amount", 2000),
-    getSettingNumber("pricing.escortSubscription.premium.amount", 5000),
-    getSettingNumber("pricing.escortSubscription.vip.amount", 15000),
-    getSettingNumber("pricing.escortSubscription.days", 30),
-  ]);
+  const [status, user, stdPrice, premPrice, vipPrice, days, recipientName, mtnNumber, orangeNumber, instructions, pendingPayment] =
+    await Promise.all([
+      getEscortSubscriptionStatus(session.user.id),
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { phone: true },
+      }),
+      getSettingNumber("pricing.escortSubscription.standard.amount", 2000),
+      getSettingNumber("pricing.escortSubscription.premium.amount", 5000),
+      getSettingNumber("pricing.escortSubscription.vip.amount", 15000),
+      getSettingNumber("pricing.escortSubscription.days", 30),
+      getSettingString("payment.manual.recipientName", ""),
+      getSettingString("payment.manual.mtnNumber", "678876470"),
+      getSettingString("payment.manual.orangeNumber", "640528712"),
+      getSettingString("payment.manual.instructions", ""),
+      prisma.payment.findFirst({
+        where: {
+          userId: session.user.id,
+          status: "PENDING",
+          provider: "MANUAL",
+          intent: { path: ["type"], equals: "ESCORT_SUBSCRIPTION" },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+
+  const manualPaymentInfo = { recipientName, mtnNumber, orangeNumber, instructions };
 
   const PLANS = [
     {
@@ -61,9 +77,27 @@ export default async function EscortAbonnementPage() {
           <CreditCard className="h-7 w-7 text-primary" /> Mon abonnement
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Abonnement mensuel obligatoire pour publier. Paiement Mobile Money via K-Pay.
+          Abonnement mensuel obligatoire pour publier. Paiement Mobile Money direct, activation par
+          l'équipe Affinité après vérification.
         </p>
       </header>
+
+      {/* Déclaration en attente de validation admin */}
+      {pendingPayment && (
+        <Card className="border-sky-500/40 bg-sky-500/5">
+          <CardContent className="flex items-start gap-3 p-6">
+            <Clock className="mt-0.5 h-5 w-5 shrink-0 text-sky-400" />
+            <div>
+              <p className="font-semibold">Déclaration en attente de validation</p>
+              <p className="text-sm text-muted-foreground">
+                Votre paiement de {pendingPayment.amount.toLocaleString("fr-FR")} FCFA a été déclaré le{" "}
+                {pendingPayment.createdAt.toLocaleDateString("fr-FR")}. Un admin vérifie la réception et
+                activera votre abonnement sous peu.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Statut actuel */}
       {status.isActive ? (
@@ -134,11 +168,18 @@ export default async function EscortAbonnementPage() {
                     </li>
                   ))}
                 </ul>
-                <SubscribeButtons
-                  tier={plan.tier}
-                  monthly={plan.monthly}
-                  defaultPhone={user?.phone ?? undefined}
-                />
+                {pendingPayment ? (
+                  <Badge variant="outline" className="w-full justify-center py-2">
+                    Déclaration en attente
+                  </Badge>
+                ) : (
+                  <SubscribeButtons
+                    tier={plan.tier}
+                    monthly={plan.monthly}
+                    defaultPhone={user?.phone ?? undefined}
+                    paymentInfo={manualPaymentInfo}
+                  />
+                )}
               </CardContent>
             </Card>
           );
@@ -146,8 +187,9 @@ export default async function EscortAbonnementPage() {
       </div>
 
       <p className="text-center text-xs text-muted-foreground">
-        Paiement sécurisé via K-Pay (MTN Mobile Money / Orange Money). Aucune carte bancaire requise.
-        Renouvellement manuel — vous serez prévenu(e) 3 jours avant l'expiration.
+        Paiement Mobile Money direct (MTN / Orange). Après envoi, déclarez votre transaction — un admin
+        active votre abonnement après vérification. Renouvellement manuel — vous serez prévenu(e) 3 jours
+        avant l'expiration.
       </p>
     </div>
   );

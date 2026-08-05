@@ -29,7 +29,6 @@ export default function robots(): MetadataRoute.Robots {
           "/compte",
           "/portefeuille",
           "/parrainage",
-          "/support",
           "/*?ref=",
           "/*?utm_",
         ],

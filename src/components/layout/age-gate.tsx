@@ -65,6 +65,16 @@ export function AgeGate() {
         <p className="mt-4 text-center text-xs text-muted-foreground">
           Tout accès non autorisé par un mineur est strictement interdit et passible de poursuites.
         </p>
+        <p className="mt-2 text-center text-xs">
+          <a
+            href="/cgu"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            Consulter le règlement
+          </a>
+        </p>
       </div>
     </div>
   );

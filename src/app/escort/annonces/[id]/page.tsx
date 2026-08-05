@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Flame, Star } from "lucide-react";
@@ -20,19 +20,20 @@ export default async function AdDetailEscortPage({
 }) {
   const { id } = await params;
   const session = await auth();
+  if (!session?.user) redirect("/connexion?callbackUrl=/escort/annonces");
   const [ad, user, servicePhotoPrice] = await Promise.all([
     prisma.ad.findUnique({
       where: { id },
       include: { city: true, media: { orderBy: { position: "asc" } } },
     }),
     prisma.user.findUnique({
-      where: { id: session!.user.id },
+      where: { id: session.user.id },
       select: { phone: true },
     }),
     getSettingNumber("pricing.servicePhoto.amount", 300),
   ]);
   if (!ad) notFound();
-  if (ad.ownerId !== session!.user.id && session!.user.role !== "ADMIN") notFound();
+  if (ad.ownerId !== session.user.id && session.user.role !== "ADMIN") notFound();
 
   const profilePhotos = ad.media.filter((m) => !m.isServicePhoto);
   const servicePhotos = ad.media.filter((m) => m.isServicePhoto);

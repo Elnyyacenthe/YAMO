@@ -75,8 +75,7 @@ export default async function PostAdPage() {
             </h1>
             <p className="text-sm text-muted-foreground">
               Seuls les comptes <strong>Escort</strong> peuvent publier des annonces. Convertissez
-              votre compte client en quelques clics — vous gardez vos données, votre solde wallet et
-              votre code parrainage.
+              votre compte client en quelques clics — vous gardez vos favoris et votre historique.
             </p>
             <div className="flex flex-col gap-2">
               <Button asChild size="lg">
@@ -95,6 +94,31 @@ export default async function PostAdPage() {
   }
 
   // Ici → ESCORT uniquement
+  const owner = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { phone: true },
+  });
+
+  if (!owner?.phone) {
+    return (
+      <div className="container py-12">
+        <Card className="mx-auto max-w-lg border-amber-500/30 bg-amber-500/5">
+          <CardContent className="space-y-4 p-8 text-center">
+            <Shield className="mx-auto h-10 w-10 text-amber-400" />
+            <h1 className="font-display text-2xl font-bold">Numéro de téléphone requis</h1>
+            <p className="text-sm text-muted-foreground">
+              Votre compte n'a pas de numéro enregistré. C'est ce numéro qui sert de contact
+              WhatsApp/Telegram sur vos annonces — contactez le support pour en ajouter un.
+            </p>
+            <Button asChild size="lg">
+              <Link href="/escort/support">Contacter le support</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-8">
       <div className="mx-auto max-w-3xl">
@@ -105,7 +129,7 @@ export default async function PostAdPage() {
           Votre annonce sera examinée par notre équipe sous 24h avant publication.
         </p>
         <div className="mt-8">
-          <AdForm cities={cities} />
+          <AdForm cities={cities} accountPhone={owner.phone} />
         </div>
       </div>
     </div>

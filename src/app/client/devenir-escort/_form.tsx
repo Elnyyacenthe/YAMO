@@ -7,13 +7,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   becomeEscortAction,
   type BecomeEscortState,
 } from "@/lib/actions/become-escort";
 
-export function BecomeEscortForm() {
+export function BecomeEscortForm({ currentPhone }: { currentPhone: string | null }) {
   const [state, formAction, pending] = useActionState<BecomeEscortState | null, FormData>(
     becomeEscortAction,
     null,
@@ -61,6 +62,18 @@ export function BecomeEscortForm() {
               d'un réseau, et ne représenter aucun mineur dans mes annonces.
             </span>
           </label>
+
+          {!currentPhone && (
+            <div className="space-y-2 rounded-lg border border-border/60 bg-card p-3">
+              <Label htmlFor="phone">Numéro de téléphone</Label>
+              <Input id="phone" name="phone" placeholder="+237 6XX XX XX XX" required />
+              <p className="text-xs text-muted-foreground">
+                Votre compte n'a pas encore de numéro. Celui-ci deviendra le contact fixe
+                (WhatsApp/Telegram) de vos futures annonces — chaque escorte doit en avoir un, et il
+                ne peut pas être partagé avec un autre compte.
+              </p>
+            </div>
+          )}
 
           <label className="flex items-start gap-3 rounded-lg border border-border/60 bg-card p-3">
             <Checkbox name="acceptTerms" required />

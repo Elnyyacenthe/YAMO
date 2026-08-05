@@ -5,10 +5,11 @@ import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { headers } from "next/headers";
+import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { signIn, signOut } from "@/auth";
-import { signUpSchema, signInSchema } from "@/lib/validations/auth";
+import { signUpSchema, signInSchema, USERNAME_REGEX } from "@/lib/validations/auth";
 import { rateLimit, RL } from "@/lib/rate-limit";
 import { getSettingNumber } from "@/lib/settings";
 import { getDashboardNamespace } from "@/lib/dashboard-namespace";
@@ -179,6 +180,61 @@ export async function registerAction(_prev: AuthState | null, formData: FormData
   }
 
   return { ok: true, redirectTo: destinationForRole(role) };
+}
+
+// =====================================================================
+// Compte CLIENT allégé (pseudo + mot de passe, sans email/téléphone)
+//
+// Utilisé pour les favoris, signalements et la messagerie support — un
+// client n'a besoin d'aucune donnée personnelle pour ces usages.
+// =====================================================================
+
+const quickAuthSchema = z.object({
+  mode: z.enum(["login", "signup"]),
+  username: z
+    .string()
+    .trim()
+    .regex(USERNAME_REGEX, "2 à 30 caractères : lettres, chiffres, . _ -"),
+  password: z.string().min(8, "8 caractères minimum").max(128),
+  confirmPassword: z.string().optional(),
+});
+
+export async function clientQuickAuthAction(input: unknown): Promise<AuthState> {
+  const ip = (await headers()).get("x-forwarded-for") ?? "unknown";
+  const rl = await rateLimit(`quickauth:${ip}`, RL.auth);
+  if (!rl.success) return { ok: false, error: "Trop de tentatives. Réessayez dans une minute." };
+
+  const parsed = quickAuthSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
+  }
+  const { mode, username, password, confirmPassword } = parsed.data;
+
+  if (mode === "signup") {
+    if (password !== confirmPassword) {
+      return { ok: false, error: "Les mots de passe ne correspondent pas" };
+    }
+    const existing = await prisma.user.findUnique({ where: { username } });
+    if (existing) return { ok: false, error: "Ce pseudo est déjà pris" };
+
+    const hashed = await bcrypt.hash(password, 10);
+    await prisma.user.create({
+      data: { username, name: username, password: hashed, role: "CLIENT" },
+    });
+  }
+
+  try {
+    await signIn("credentials", { identifier: username, password, redirect: false });
+    return { ok: true, redirectTo: "/client" };
+  } catch (e) {
+    if (e instanceof AuthError) {
+      return {
+        ok: false,
+        error: mode === "signup" ? "Erreur lors de la connexion" : "Pseudo ou mot de passe incorrect",
+      };
+    }
+    throw e;
+  }
 }
 
 export async function logoutAction() {

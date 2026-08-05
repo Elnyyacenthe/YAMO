@@ -1,15 +1,15 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { timeAgo, formatXAF } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
 
 /**
- * Page Mon Compte — partagée entre /client/compte et /escort/compte.
+ * Page Mon Compte — identité et sécurité, partagée entre /client/compte et
+ * /escort/compte. Les statistiques d'activité (annonces, favoris) vivent sur
+ * le tableau de bord respectif, pas ici, pour éviter la redondance.
  */
 export default async function AccountPage({ backUrl = "/compte" }: { backUrl?: string }) {
   const session = await auth();
@@ -17,20 +17,9 @@ export default async function AccountPage({ backUrl = "/compte" }: { backUrl?: s
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    include: { _count: { select: { ads: true, favorites: true, referrals: true } } },
+    select: { name: true, email: true, phone: true, username: true, role: true, createdAt: true },
   });
   if (!user) redirect("/connexion");
-
-  // Pour les ADMIN/MODERATOR, lien externe vers affinité.com/admin (cf. dashboard-namespace.ts)
-  const yamoAdminUrl =
-    process.env.NEXT_PUBLIC_YAMO_ADMIN_URL ??
-    `${process.env.NEXT_PUBLIC_YAMO_URL ?? "https://affinité.com"}/admin`;
-  const dashboardLink =
-    user.role === "ADMIN" || user.role === "MODERATOR"
-      ? yamoAdminUrl
-      : user.role === "ESCORT"
-        ? "/escort/dashboard"
-        : "/client";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -39,41 +28,17 @@ export default async function AccountPage({ backUrl = "/compte" }: { backUrl?: s
       <Card>
         <CardContent className="space-y-3 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">{user.name ?? "Sans nom"}</h2>
+            <h2 className="text-lg font-semibold">{user.name ?? user.username ?? "Sans nom"}</h2>
             <Badge variant="outline">{user.role}</Badge>
           </div>
-          <p className="text-sm text-muted-foreground">{user.email}</p>
-          <p className="text-sm text-muted-foreground">{user.phone}</p>
+          {user.email && <p className="text-sm text-muted-foreground">{user.email}</p>}
+          {user.phone && <p className="text-sm text-muted-foreground">{user.phone}</p>}
+          {user.username && (
+            <p className="text-sm text-muted-foreground">Pseudo : {user.username}</p>
+          )}
           <p className="text-xs text-muted-foreground">Inscrit {timeAgo(user.createdAt)}</p>
         </CardContent>
       </Card>
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="font-display text-2xl font-bold text-primary">
-              {formatXAF(user.walletBalance)}
-            </p>
-            <p className="text-xs text-muted-foreground">Solde</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="font-display text-2xl font-bold">{user._count.ads}</p>
-            <p className="text-xs text-muted-foreground">Annonces</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="font-display text-2xl font-bold">{user._count.referrals}</p>
-            <p className="text-xs text-muted-foreground">Filleuls</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Button asChild className="w-full">
-        <Link href={dashboardLink}>Accéder à mon dashboard</Link>
-      </Button>
 
       <Card className="border-destructive/30">
         <CardContent className="space-y-2 p-6">

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Clock, Crown, BadgeCheck, Star, Eye, Users } from "lucide-react";
 
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -81,7 +82,10 @@ export default async function AdPage({ params }: { params: Promise<{ slug: strin
   // Tracking de la vue (async, ne bloque pas)
   trackAdView(ad.id).catch(() => null);
 
-  const isFav = await isFavoritedAction(ad.id);
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
+  const viewerRole = session?.user?.role;
+  const isFav = isLoggedIn ? await isFavoritedAction(ad.id) : false;
 
   // JSON-LD Schema.org : Service + BreadcrumbList
   const serviceLd = {
@@ -237,17 +241,23 @@ export default async function AdPage({ params }: { params: Promise<{ slug: strin
             </CardContent>
           </Card>
 
-          <Separator />
-          <div className="flex items-center justify-between gap-2">
-            <FavoriteButton adId={ad.id} initialFavorited={isFav} variant="default" />
-            <ReportButton adId={ad.id} />
-          </div>
+          {viewerRole !== "ESCORT" && (
+            <>
+              <Separator />
+              <div className="flex items-center justify-between gap-2">
+                <FavoriteButton adId={ad.id} initialFavorited={isFav} variant="default" isLoggedIn={isLoggedIn} />
+                <ReportButton adTitle={ad.title} adUrl={`${SITE_URL}/annonce/${ad.slug}`} isLoggedIn={isLoggedIn} />
+              </div>
+            </>
+          )}
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
           <ContactCard
             adId={ad.id}
             whatsappPhone={ad.whatsappPhone}
+            whatsappEnabled={ad.whatsappEnabled}
+            telegramEnabled={ad.telegramEnabled}
             callPhone={ad.callPhone}
             adTitle={ad.title}
           />

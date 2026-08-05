@@ -213,49 +213,6 @@ export async function initiateVerificationAction(input: {
 // Les seuls payeurs sur Affinité sont maintenant les ESCORTES (abonnement mensuel
 // + options à la carte : Bump, Sticky, Photo service, Vérification, Diamond).
 
-// =====================================================================
-// ESCORT SUBSCRIPTION — abonnement mensuel obligatoire pour publier
-// =====================================================================
-
-export async function initiateEscortSubscriptionAction(input: {
-  tier: "STANDARD" | "PREMIUM" | "VIP";
-  months: 1 | 3 | 12;
-  autoRenew?: boolean;
-  phone: string;
-}): Promise<InitPaymentResult> {
-  const session = await auth();
-  if (!session?.user) return err("Non authentifié");
-  if (!(await rl(`escortsub:${session.user.id}`)).success) return err("Trop de tentatives");
-
-  const months = ([1, 3, 12].includes(input.months) ? input.months : 1) as 1 | 3 | 12;
-  const tierKey = input.tier.toLowerCase();
-  const monthlyKey = `pricing.escortSubscription.${tierKey}.amount`;
-  const fallback = input.tier === "VIP" ? 15000 : input.tier === "PREMIUM" ? 5000 : 2000;
-  const monthly = await getSettingNumber(monthlyKey, fallback);
-  const daysPerMonth = await getSettingNumber("pricing.escortSubscription.days", 30);
-
-  // Réductions appliquées server-side (sécurité : pas de confiance dans le client)
-  const discountPercent = months >= 12 ? 15 : months >= 3 ? 5 : 0;
-  const baseAmount = monthly * months;
-  const amount = Math.round(baseAmount * (1 - discountPercent / 100));
-  const days = daysPerMonth * months;
-
-  const discountSuffix = discountPercent > 0 ? ` (-${discountPercent}%)` : "";
-  return kpayOneShotPayment({
-    userId: session.user.id,
-    amount,
-    phone: input.phone,
-    intent: {
-      type: "ESCORT_SUBSCRIPTION",
-      payload: {
-        userId: session.user.id,
-        tier: input.tier,
-        months,
-        days,
-        autoRenew: input.autoRenew,
-      },
-    },
-    description: `AFFINITE - Abonnement ${input.tier} ${months} mois${discountSuffix}`,
-  });
-}
-
+// Note (2026-08-04) : l'abonnement escorte n'utilise plus K-Pay (API indisponible).
+// Voir declareManualSubscriptionPaymentAction dans @/lib/actions/manual-payment —
+// paiement Mobile Money direct + déclaration, validée manuellement par un admin.

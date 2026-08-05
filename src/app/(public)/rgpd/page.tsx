@@ -37,7 +37,7 @@ export default function RgpdPage() {
 
         <h2>Comment exercer ces droits ?</h2>
         <p>
-          Écrivez à <strong>privacy@{SITE_NAME.toLowerCase()}.cm</strong> en précisant votre demande et en joignant
+          Écrivez à <strong>privacy@{SITE_NAME.toLowerCase()}.com</strong> en précisant votre demande et en joignant
           une preuve d'identité. Délai de réponse maximum : 30 jours.
         </p>
 
@@ -57,7 +57,7 @@ export default function RgpdPage() {
 
         <h2>Délégué à la protection des données</h2>
         <p>
-          DPO : dpo@{SITE_NAME.toLowerCase()}.cm
+          DPO : dpo@{SITE_NAME.toLowerCase()}.com
         </p>
       </article>
     </div>

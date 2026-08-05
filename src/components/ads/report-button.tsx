@@ -1,103 +1,57 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Flag } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Flag, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { reportAdAction } from "@/lib/actions/reports";
+import { ClientAuthModal } from "@/components/auth/client-auth-modal";
+import { submitAdReportAction } from "@/lib/actions/support";
 
-const REASONS = [
-  { value: "FAKE", label: "Fausse annonce / photos volées" },
-  { value: "SCAM", label: "Arnaque / extorsion" },
-  { value: "UNDERAGE", label: "Personne mineure suspectée" },
-  { value: "ILLEGAL", label: "Contenu illégal" },
-  { value: "SPAM", label: "Spam" },
-  { value: "HARASSMENT", label: "Harcèlement" },
-  { value: "OTHER", label: "Autre" },
-];
+interface Props {
+  /** Titre de l'annonce, utilisé pour le message envoyé au support. */
+  adTitle: string;
+  adUrl: string;
+  isLoggedIn?: boolean;
+}
 
-export function ReportButton({ adId }: { adId: string }) {
-  const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState("FAKE");
-  const [details, setDetails] = useState("");
+/**
+ * "Signaler" ouvre directement une discussion avec le support (fil unique,
+ * cf. lib/actions/support.ts) : le message identifiant l'annonce est envoyé
+ * automatiquement, suivi d'une relance auto demandant des preuves.
+ */
+export function ReportButton({ adTitle, adUrl, isLoggedIn = true }: Props) {
+  const router = useRouter();
+  const [authOpen, setAuthOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  function submit() {
+  function submitReport() {
     startTransition(async () => {
-      const res = await reportAdAction({ adId, reason: reason as never, details });
+      const res = await submitAdReportAction({ adTitle, adUrl });
       if (res.ok) {
-        toast.success("Signalement envoyé. Merci pour votre vigilance.");
-        setOpen(false);
-        setDetails("");
+        router.push("/client/support");
       } else {
         toast.error(res.error);
       }
     });
   }
 
+  function handleClick() {
+    if (!isLoggedIn) {
+      setAuthOpen(true);
+      return;
+    }
+    submitReport();
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="text-muted-foreground">
-          <Flag className="h-4 w-4" /> Signaler
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Signaler cette annonce</DialogTitle>
-          <DialogDescription>
-            Aidez-nous à garder Affinité sain. Vos signalements sont anonymes et examinés sous 24h.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-3">
-          <Select value={reason} onValueChange={setReason}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {REASONS.map((r) => (
-                <SelectItem key={r.value} value={r.value}>
-                  {r.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Textarea
-            value={details}
-            onChange={(e) => setDetails(e.target.value)}
-            placeholder="Détails (optionnel)"
-            maxLength={500}
-          />
-        </div>
-
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Annuler
-          </Button>
-          <Button onClick={submit} disabled={pending} variant="destructive">
-            Envoyer le signalement
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={handleClick} disabled={pending}>
+        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Flag className="h-4 w-4" />}
+        Signaler
+      </Button>
+      <ClientAuthModal open={authOpen} onOpenChange={setAuthOpen} onSuccess={submitReport} />
+    </>
   );
 }

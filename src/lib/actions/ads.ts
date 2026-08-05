@@ -119,6 +119,21 @@ export async function createAdAction(
     if (!guard.ok) return { ok: false, error: guard.reason };
   }
 
+  // v16 — Le numéro de contact (WhatsApp/Telegram) est TOUJOURS celui du
+  // compte, jamais une saisie libre : empêche de changer de numéro à chaque
+  // annonce et empêche mécaniquement deux escortes de partager un numéro
+  // (contrainte @unique sur User.phone).
+  const owner = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { phone: true },
+  });
+  if (!owner?.phone) {
+    return {
+      ok: false,
+      error: "Votre compte n'a pas de numéro de téléphone. Contactez le support pour en ajouter un avant de publier.",
+    };
+  }
+
   // Construction de l'objet brut depuis FormData
   const raw = {
     title: formData.get("title"),
@@ -127,7 +142,8 @@ export async function createAdAction(
     neighborhood: formData.get("neighborhood") || undefined,
     price: formData.get("price"),
     priceNight: formData.get("priceNight") || undefined,
-    whatsappPhone: formData.get("whatsappPhone"),
+    whatsappEnabled: formData.get("whatsappEnabled") === "on",
+    telegramEnabled: formData.get("telegramEnabled") === "on",
     callPhone: formData.get("callPhone") || undefined,
     services: formData.getAll("services").map(String),
     incall: formData.get("incall") === "on",
@@ -222,7 +238,9 @@ export async function createAdAction(
       description: data.description,
       price: data.price,
       priceNight: data.priceNight,
-      whatsappPhone: data.whatsappPhone,
+      whatsappPhone: owner.phone,
+      whatsappEnabled: data.whatsappEnabled,
+      telegramEnabled: data.telegramEnabled,
       callPhone: data.callPhone,
       neighborhood: data.neighborhood,
       services: data.services,
