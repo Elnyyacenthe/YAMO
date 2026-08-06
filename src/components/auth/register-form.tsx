@@ -91,6 +91,11 @@ function EscortRegisterForm() {
     registerAction,
     null,
   );
+  // Champs contrôlés : en cas d'erreur (ex: numéro déjà utilisé), la saisie
+  // reste affichée — pas besoin de tout retaper depuis le début.
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
 
   useEffect(() => {
     if (state?.ok) {
@@ -100,6 +105,11 @@ function EscortRegisterForm() {
       toast.error(state.error);
     }
   }, [state]);
+
+  function fieldError(field: string) {
+    const msg = state && !state.ok ? state.fieldErrors?.[field]?.[0] : undefined;
+    return msg ? <p className="text-xs text-destructive">{msg}</p> : null;
+  }
 
   return (
     <Card className="border-primary/20">
@@ -120,27 +130,32 @@ function EscortRegisterForm() {
 
           <div className="space-y-2">
             <Label htmlFor="name">Pseudo / Nom</Label>
-            <Input id="name" name="name" placeholder="Sandra" required minLength={2} />
+            <Input id="name" name="name" placeholder="Sandra" required minLength={2} value={name} onChange={(e) => setName(e.target.value)} />
+            {fieldError("name")}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" placeholder="vous@example.com" required />
+            <Input id="email" name="email" type="email" placeholder="vous@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            {fieldError("email")}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="phone">Téléphone Cameroun</Label>
-            <Input id="phone" name="phone" type="tel" placeholder="+237 6XX XX XX XX" required />
+            <Input id="phone" name="phone" type="tel" placeholder="+237 6XX XX XX XX" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+            {fieldError("phone")}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="password">Mot de passe</Label>
               <Input id="password" name="password" type="password" required minLength={8} />
+              {fieldError("password")}
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmer</Label>
               <Input id="confirmPassword" name="confirmPassword" type="password" required minLength={8} />
+              {fieldError("confirmPassword")}
             </div>
           </div>
 

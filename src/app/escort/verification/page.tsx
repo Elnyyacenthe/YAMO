@@ -85,6 +85,10 @@ export default async function VerificationPage() {
         <p className="text-muted-foreground">
           Obtenez le badge <strong>Vérifiée</strong> sur toutes vos annonces. Confiance accrue → +50% de contacts.
         </p>
+        <p className="mt-2 text-sm text-sky-300">
+          <Send className="mr-1 inline h-4 w-4" /> Le paiement se fait ici sur le site — l'envoi de vos
+          documents se fait ensuite directement sur <strong>Telegram</strong>, pas d'upload sur le site.
+        </p>
       </div>
 
       {latest?.status === "VERIFIED" && (
@@ -160,21 +164,39 @@ export default async function VerificationPage() {
       {!latest && (
         <>
           <Card className="border-sky-500/30 bg-sky-500/5">
-            <CardContent className="space-y-2 p-6">
+            <CardContent className="space-y-4 p-6">
               <h2 className="flex items-center gap-2 font-display text-xl font-bold">
                 <ShieldAlert className="h-5 w-5 text-sky-400" /> Comment procéder
               </h2>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="rounded-md border border-border/60 bg-secondary/40 px-3 py-2">
+                  <p className="text-[10px] uppercase text-muted-foreground">MTN Mobile Money</p>
+                  <p className="select-all font-mono text-lg font-semibold">{mtnNumber || "—"}</p>
+                </div>
+                <div className="rounded-md border border-border/60 bg-secondary/40 px-3 py-2">
+                  <p className="text-[10px] uppercase text-muted-foreground">Orange Money</p>
+                  <p className="select-all font-mono text-lg font-semibold">{orangeNumber || "—"}</p>
+                </div>
+              </div>
+              {recipientName && (
+                <p className="text-xs text-muted-foreground">Titulaire du compte : {recipientName}</p>
+              )}
+
               <ul className="ml-5 list-disc space-y-1 text-sm text-muted-foreground">
                 <li>
                   <Clock className="mr-1 inline h-3.5 w-3.5" />
-                  Payez les frais de vérification via Mobile Money ci-dessous
+                  Envoyez <strong>{verificationPrice.toLocaleString("fr-FR")} FCFA</strong> au numéro de
+                  votre choix ci-dessus
                 </li>
+                <li>Cliquez sur "Payer la vérification" ci-dessous pour déclarer votre paiement</li>
                 <li>
-                  Envoyez ensuite vos documents (recto/verso CNI ou passeport + selfie) directement sur
-                  Telegram — le lien s'affiche juste après votre déclaration de paiement
+                  Le lien vers la conversation Telegram apparaît immédiatement après — envoyez-y vos
+                  documents (recto/verso CNI ou passeport + selfie)
                 </li>
                 <li>Vos données sont chiffrées et ne sont visibles que par l'équipe de modération</li>
               </ul>
+              {instructions && <p className="text-xs text-muted-foreground">{instructions}</p>}
             </CardContent>
           </Card>
 

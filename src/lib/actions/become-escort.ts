@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { slugify } from "@/lib/utils";
 import { PHONE_REGEX } from "@/lib/validations/auth";
+import { formatCameroonPhone } from "@/lib/phone";
 
 export type BecomeEscortState =
   | { ok: true }
@@ -65,7 +66,7 @@ export async function becomeEscortAction(
     if (!PHONE_REGEX.test(raw.replace(/\s/g, ""))) {
       return { ok: false, error: "Numéro camerounais invalide (ex : +237 6XX XX XX XX)" };
     }
-    phone = raw.replace(/\s/g, "").replace(/^237/, "+237");
+    phone = formatCameroonPhone(raw);
 
     const existing = await prisma.user.findFirst({
       where: { phone, id: { not: user.id } },

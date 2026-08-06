@@ -13,6 +13,7 @@ import { signUpSchema, signInSchema, USERNAME_REGEX } from "@/lib/validations/au
 import { rateLimit, RL } from "@/lib/rate-limit";
 import { getSettingNumber } from "@/lib/settings";
 import { getDashboardNamespace } from "@/lib/dashboard-namespace";
+import { formatCameroonPhone } from "@/lib/phone";
 import type { Role } from "@prisma/client";
 
 export type AuthState =
@@ -62,9 +63,7 @@ export async function loginAction(_prev: AuthState | null, formData: FormData): 
     await signIn("credentials", { ...parsed.data, redirect: false });
     // On lit le rôle réel depuis la DB pour calculer la destination
     const isEmail = parsed.data.identifier.includes("@");
-    const cleanedPhone = parsed.data.identifier
-      .replace(/\s/g, "")
-      .replace(/^237/, "+237");
+    const cleanedPhone = formatCameroonPhone(parsed.data.identifier);
     const user = await prisma.user.findFirst({
       where: isEmail
         ? { email: parsed.data.identifier }
@@ -111,14 +110,23 @@ export async function registerAction(_prev: AuthState | null, formData: FormData
     };
   }
   const { name, email, phone, password, role, referralCode } = parsed.data;
-  const cleanedPhone = phone.replace(/\s/g, "").replace(/^237/, "+237");
+  const cleanedPhone = formatCameroonPhone(phone);
 
-  // Anti-doublon (email, téléphone)
-  const existing = await prisma.user.findFirst({
-    where: { OR: [{ email }, { phone: cleanedPhone }] },
-  });
-  if (existing) {
-    return { ok: false, error: "Un compte existe déjà avec cet email ou téléphone" };
+  // Anti-doublon (email, téléphone) — vérifiés séparément pour pointer
+  // l'erreur sur le bon champ plutôt qu'un message générique.
+  const [existingEmail, existingPhone] = await Promise.all([
+    prisma.user.findFirst({ where: { email }, select: { id: true } }),
+    prisma.user.findFirst({ where: { phone: cleanedPhone }, select: { id: true } }),
+  ]);
+  if (existingEmail || existingPhone) {
+    const fieldErrors: Record<string, string[]> = {};
+    if (existingEmail) fieldErrors.email = ["Cet email est déjà utilisé par un autre compte"];
+    if (existingPhone) fieldErrors.phone = ["Ce numéro est déjà utilisé par un autre compte"];
+    return {
+      ok: false,
+      error: "Un compte existe déjà avec cet email ou ce téléphone",
+      fieldErrors,
+    };
   }
 
   // Recherche du parrain si code fourni

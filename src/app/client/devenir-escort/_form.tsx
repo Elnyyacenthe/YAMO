@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,6 +19,9 @@ export function BecomeEscortForm({ currentPhone }: { currentPhone: string | null
     becomeEscortAction,
     null,
   );
+  // Champ contrôlé : en cas d'erreur (ex: numéro déjà utilisé), la saisie
+  // reste affichée — pas besoin de tout retaper depuis le début.
+  const [phone, setPhone] = useState("");
 
   useEffect(() => {
     if (state?.ok) {
@@ -66,7 +69,17 @@ export function BecomeEscortForm({ currentPhone }: { currentPhone: string | null
           {!currentPhone && (
             <div className="space-y-2 rounded-lg border border-border/60 bg-card p-3">
               <Label htmlFor="phone">Numéro de téléphone</Label>
-              <Input id="phone" name="phone" placeholder="+237 6XX XX XX XX" required />
+              <Input
+                id="phone"
+                name="phone"
+                placeholder="+237 6XX XX XX XX"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+              {state && !state.ok && (
+                <p className="text-xs text-destructive">{state.error}</p>
+              )}
               <p className="text-xs text-muted-foreground">
                 Votre compte n'a pas encore de numéro. Celui-ci deviendra le contact fixe
                 (WhatsApp/Telegram) de vos futures annonces — chaque escorte doit en avoir un, et il
