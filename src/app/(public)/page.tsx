@@ -215,7 +215,7 @@ export default async function HomePage() {
             Vous êtes escort ? <span className="gradient-text">Augmentez vos revenus</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            Publiez gratuitement votre annonce, atteignez des milliers de clients sérieux, et boostez votre visibilité avec nos options Premium et VIP.
+            Créez votre compte gratuitement, publiez votre annonce dès 2 500 FCFA / semaine, atteignez des milliers de clients sérieux, et boostez votre visibilité avec nos options Premium et VIP.
           </p>
           <Button asChild size="xl" className="mt-8">
             <Link href="/inscription?role=ESCORT">Créer mon compte gratuit</Link>

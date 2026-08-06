@@ -110,7 +110,7 @@ function EscortRegisterForm() {
         </CardTitle>
         <CardDescription>
           Publiez vos annonces auprès de milliers de clients camerounais. Inscription gratuite,
-          abonnement mensuel à partir de <strong>2 000 FCFA / mois</strong>.
+          abonnement à partir de <strong>2 500 FCFA / semaine</strong>.
         </CardDescription>
       </CardHeader>
       <CardContent>

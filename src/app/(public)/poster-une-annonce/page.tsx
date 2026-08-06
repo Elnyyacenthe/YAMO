@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Poster une annonce",
-  description: "Publiez gratuitement votre annonce escort au Cameroun.",
+  description: "Publiez votre annonce escort au Cameroun, dès 2 500 FCFA / semaine.",
 };
 
 export default async function PostAdPage() {

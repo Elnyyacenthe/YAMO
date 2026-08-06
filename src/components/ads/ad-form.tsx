@@ -250,6 +250,12 @@ export function AdForm({ cities, accountPhone }: Props) {
                 <span className="text-sm">Telegram</span>
               </label>
             </div>
+            <p className="text-xs text-muted-foreground">
+              ⚠️ Avant d'activer Telegram : dans l'appli Telegram, allez dans{" "}
+              <strong>Réglages → Confidentialité et sécurité → Numéro de téléphone</strong> et mettez
+              "Qui peut me trouver par mon numéro" sur <strong>Tout le monde</strong>. Sans ça, les
+              clients qui cliquent sur "Contacter sur Telegram" ne pourront pas ouvrir la conversation.
+            </p>
           </div>
 
           <div className="space-y-2">

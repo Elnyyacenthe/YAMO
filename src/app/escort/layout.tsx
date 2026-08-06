@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard, User, Settings, BadgeCheck, MessageSquare, Sparkles, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, User, BadgeCheck, MessageSquare, Sparkles, ShieldAlert } from "lucide-react";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { MobileSidebar } from "@/components/dashboard/mobile-sidebar";
+import { LiveRefresh } from "@/components/dashboard/live-refresh";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { SITE_NAME } from "@/lib/utils";
@@ -45,7 +46,11 @@ export default async function EscortLayout({ children }: { children: React.React
             Vous pouvez utiliser la messagerie ci-dessous pour vous justifier auprès de notre équipe.
           </p>
         </div>
-        <SupportThread messages={ticket?.messages ?? []} />
+        <SupportThread
+          messages={ticket?.messages ?? []}
+          currentUserName={session.user.name}
+          currentUserImage={session.user.image}
+        />
         <LogoutButton variant="button" />
       </div>
     );
@@ -93,7 +98,6 @@ export default async function EscortLayout({ children }: { children: React.React
           items={[
             { href: "/escort/dashboard", label: "Tableau de bord", icon: <LayoutDashboard className="h-4 w-4" /> },
             { href: "/escort/profil", label: "Mon profil", icon: <User className="h-4 w-4" /> },
-            { href: "/escort/compte", label: "Mon compte", icon: <Settings className="h-4 w-4" /> },
             { href: "/escort/abonnement", label: "Mon abonnement", icon: <Sparkles className="h-4 w-4" /> },
             { href: "/escort/verification", label: "Vérification ID", icon: <BadgeCheck className="h-4 w-4" /> },
             { href: "/escort/support", label: "Service client", icon: <MessageSquare className="h-4 w-4" />, badge: unreadSupportReply },
@@ -107,6 +111,7 @@ export default async function EscortLayout({ children }: { children: React.React
 
   return (
     <div className="grid min-h-screen md:grid-cols-[260px_1fr]">
+      <LiveRefresh />
       <MobileSidebar siteName={SITE_NAME}>{navContent}</MobileSidebar>
 
       <aside className="hidden border-b border-border/60 bg-card/40 backdrop-blur md:block md:border-b-0 md:border-r">

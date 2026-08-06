@@ -6,9 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatXAF } from "@/lib/utils";
 import { getSettingNumber } from "@/lib/settings";
+import { getEscortSubscriptionPricing } from "@/lib/escort-subscription";
 
 export default async function PremiumPage() {
-  const [premiumPrice, vipPrice, diamondPrice, premiumDays, vipDays, diamondDays] = await Promise.all([
+  const [stdPricing, premiumPrice, vipPrice, diamondPrice, premiumDays, vipDays, diamondDays] = await Promise.all([
+    getEscortSubscriptionPricing("STANDARD"),
     getSettingNumber("pricing.premium.amount", 5000),
     getSettingNumber("pricing.vip.amount", 15000),
     getSettingNumber("pricing.diamond.amount", 50000),
@@ -21,11 +23,11 @@ export default async function PremiumPage() {
     {
       tier: "STANDARD",
       name: "Standard",
-      price: 0,
-      days: 0,
+      price: stdPricing.amount,
+      days: stdPricing.days,
       icon: Check,
       color: "border-border",
-      features: ["Publication gratuite", "Modération sous 24h", "Contact WhatsApp masqué", "3 photos max"],
+      features: ["Abonnement requis pour publier", "Modération sous 24h", "Contact WhatsApp masqué", "3 photos max"],
     },
     {
       tier: "PREMIUM",
@@ -92,10 +94,8 @@ export default async function PremiumPage() {
                 <div>
                   <h3 className="font-display text-2xl font-bold">{plan.name}</h3>
                   <p className="text-3xl font-bold">
-                    {plan.price === 0 ? "Gratuit" : formatXAF(plan.price)}
-                    {plan.price > 0 && (
-                      <span className="text-sm text-muted-foreground"> / {plan.days}j</span>
-                    )}
+                    {formatXAF(plan.price)}
+                    <span className="text-sm text-muted-foreground"> / {plan.days}j</span>
                   </p>
                 </div>
                 <ul className="space-y-2 text-sm">

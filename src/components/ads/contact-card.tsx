@@ -6,6 +6,7 @@ import { MessageCircle, Send, Phone, ShieldAlert, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { trackWhatsAppClick } from "@/lib/actions/ads";
+import { normalizeCameroonPhone } from "@/lib/phone";
 
 interface Props {
   adId: string;
@@ -27,7 +28,7 @@ export function ContactCard({
   adTitle,
 }: Props) {
   const [opening, setOpening] = useState(false);
-  const cleanPhone = whatsappPhone.replace(/\s/g, "").replace(/^\+/, "");
+  const cleanPhone = normalizeCameroonPhone(whatsappPhone);
 
   function openWhatsApp() {
     setOpening(true);

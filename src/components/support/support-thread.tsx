@@ -3,14 +3,11 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { generateReactHelpers } from "@uploadthing/react";
-import { Loader2, Send, MessageSquare, Paperclip, X, FileText } from "lucide-react";
+import { Loader2, Send, MessageSquare, Paperclip, X, FileText, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
-import { timeAgo } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { sendSupportMessageAction } from "@/lib/actions/support";
 import type { OurFileRouter } from "@/lib/uploadthing";
 
@@ -29,7 +26,20 @@ function isImageFile(name?: string | null) {
   return !!name && /\.(jpe?g|png|gif|webp|avif)$/i.test(name);
 }
 
-function Attachment({ url, name }: { url: string; name?: string | null }) {
+function dayKey(d: Date) {
+  return d.toDateString();
+}
+
+function formatDayLabel(d: Date) {
+  const s = d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function formatTime(d: Date) {
+  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function Attachment({ url, name, mine }: { url: string; name?: string | null; mine: boolean }) {
   if (isImageFile(name)) {
     return (
       <a href={url} target="_blank" rel="noopener noreferrer" className="mt-2 block">
@@ -48,15 +58,27 @@ function Attachment({ url, name }: { url: string; name?: string | null }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-2 flex items-center gap-2 rounded-lg border border-border/60 bg-secondary/40 px-3 py-2 text-sm hover:border-primary/50"
+      className={`mt-2 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+        mine
+          ? "border-primary-foreground/30 bg-primary-foreground/10 hover:border-primary-foreground/50"
+          : "border-border/60 bg-secondary/40 hover:border-primary/50"
+      }`}
     >
-      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <FileText className="h-4 w-4 shrink-0 opacity-70" />
       <span className="truncate">{name ?? "Document joint"}</span>
     </a>
   );
 }
 
-export function SupportThread({ messages }: { messages: SupportThreadMessage[] }) {
+export function SupportThread({
+  messages,
+  currentUserName,
+  currentUserImage,
+}: {
+  messages: SupportThreadMessage[];
+  currentUserName?: string | null;
+  currentUserImage?: string | null;
+}) {
   const router = useRouter();
   const [body, setBody] = useState("");
   const [attachment, setAttachment] = useState<{ url: string; name: string } | null>(null);
@@ -92,97 +114,132 @@ export function SupportThread({ messages }: { messages: SupportThreadMessage[] }
 
   const busy = pending || isUploading;
 
+  // Groupe les messages par jour pour afficher un séparateur de date.
+  let lastDay = "";
+
   return (
-    <div className="space-y-4">
-      <div className="space-y-3">
+    <div className="flex flex-col gap-4">
+      <div className="space-y-1 rounded-2xl border border-border/50 bg-secondary/20 p-4">
         {messages.length === 0 ? (
-          <Card className="p-10 text-center">
+          <div className="p-8 text-center">
             <MessageSquare className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
               Aucun message pour l'instant. Écrivez à l'équipe Affinité ci-dessous — on vous répond
               généralement sous 24h ouvrées.
             </p>
-          </Card>
+          </div>
         ) : (
-          messages.map((m) => (
-            <Card
-              key={m.id}
-              className={m.isAdmin ? "border-primary/40 bg-primary/5" : "border-border/60"}
-            >
-              <CardContent className="space-y-1.5 p-4">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <strong className={m.isAdmin ? "text-primary" : ""}>
-                    {m.isAdmin ? "🛡️ Équipe Affinité" : "Vous"}
-                  </strong>
-                  <span>{timeAgo(m.createdAt)}</span>
+          messages.map((m) => {
+            const key = dayKey(m.createdAt);
+            const showDivider = key !== lastDay;
+            lastDay = key;
+
+            return (
+              <div key={m.id}>
+                {showDivider && (
+                  <div className="my-4 flex justify-center">
+                    <span className="rounded-full bg-background px-4 py-1 text-xs font-medium text-muted-foreground shadow-sm">
+                      {formatDayLabel(m.createdAt)}
+                    </span>
+                  </div>
+                )}
+                <div className={`flex items-end gap-2 py-1.5 ${m.isAdmin ? "" : "flex-row-reverse"}`}>
+                  <Avatar className="h-8 w-8 shrink-0 border border-border/40">
+                    {m.isAdmin ? (
+                      <AvatarFallback className="bg-primary/15 text-primary">
+                        <ShieldCheck className="h-4 w-4" />
+                      </AvatarFallback>
+                    ) : (
+                      <>
+                        <AvatarImage src={currentUserImage ?? undefined} alt={currentUserName ?? "Vous"} />
+                        <AvatarFallback className="bg-secondary text-foreground">
+                          {currentUserName?.[0]?.toUpperCase() ?? "V"}
+                        </AvatarFallback>
+                      </>
+                    )}
+                  </Avatar>
+
+                  <div className={`flex max-w-[75%] flex-col gap-1 ${m.isAdmin ? "items-start" : "items-end"}`}>
+                    <div
+                      className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                        m.isAdmin
+                          ? "rounded-bl-sm border border-border/50 bg-card"
+                          : "rounded-br-sm bg-primary text-primary-foreground"
+                      }`}
+                    >
+                      <p className={`mb-0.5 text-xs font-semibold ${m.isAdmin ? "text-primary" : "text-primary-foreground/80"}`}>
+                        {m.isAdmin ? "Équipe Affinité" : currentUserName ?? "Vous"}
+                      </p>
+                      {m.body && <p className="whitespace-pre-wrap text-sm">{m.body}</p>}
+                      {m.attachmentUrl && (
+                        <Attachment url={m.attachmentUrl} name={m.attachmentName} mine={!m.isAdmin} />
+                      )}
+                    </div>
+                    <span className="px-1 text-[10px] text-muted-foreground">{formatTime(m.createdAt)}</span>
+                  </div>
                 </div>
-                {m.body && <p className="whitespace-pre-wrap text-sm">{m.body}</p>}
-                {m.attachmentUrl && <Attachment url={m.attachmentUrl} name={m.attachmentName} />}
-              </CardContent>
-            </Card>
-          ))
+              </div>
+            );
+          })
         )}
       </div>
 
-      <Card>
-        <CardContent className="space-y-2 p-4">
-          <Textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Écrivez votre message…"
-            rows={3}
-            maxLength={3000}
-            disabled={busy}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault();
-                submit();
-              }
-            }}
-          />
+      {attachment && (
+        <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs">
+          <Paperclip className="h-3.5 w-3.5 shrink-0 text-primary" />
+          <span className="flex-1 truncate">{attachment.name}</span>
+          <button type="button" onClick={() => setAttachment(null)} className="text-muted-foreground hover:text-foreground">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
-          {attachment && (
-            <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs">
-              <Paperclip className="h-3.5 w-3.5 shrink-0 text-primary" />
-              <span className="flex-1 truncate">{attachment.name}</span>
-              <button type="button" onClick={() => setAttachment(null)} className="text-muted-foreground hover:text-foreground">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          )}
+      <div className="flex items-center gap-2 rounded-full border border-border/60 bg-card px-2 py-2 shadow-sm">
+        <label
+          htmlFor="support-attachment-input"
+          className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+          title="Joindre un fichier"
+        >
+          {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+        </label>
+        <input
+          id="support-attachment-input"
+          type="file"
+          accept="image/*,application/pdf"
+          className="hidden"
+          disabled={busy}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) startUpload([file]);
+            e.target.value = "";
+          }}
+        />
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="support-attachment-input"
-                className="flex cursor-pointer items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <Paperclip className="h-4 w-4" />
-                {isUploading ? "Envoi…" : "Joindre un fichier"}
-              </label>
-              <input
-                id="support-attachment-input"
-                type="file"
-                accept="image/*,application/pdf"
-                className="hidden"
-                disabled={busy}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) startUpload([file]);
-                  e.target.value = "";
-                }}
-              />
-              <p className="hidden text-xs text-muted-foreground sm:block">
-                Ctrl/Cmd + Entrée pour envoyer
-              </p>
-            </div>
-            <Button onClick={submit} disabled={busy || (!body.trim() && !attachment)} size="sm">
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Envoyer
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        <input
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="Tapez un message…"
+          maxLength={3000}
+          disabled={busy}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              submit();
+            }
+          }}
+          className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        />
+
+        <button
+          type="button"
+          onClick={submit}
+          disabled={busy || (!body.trim() && !attachment)}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
+          aria-label="Envoyer"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+        </button>
+      </div>
     </div>
   );
 }

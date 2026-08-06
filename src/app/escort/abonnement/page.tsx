@@ -5,25 +5,24 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getSettingNumber, getSettingString } from "@/lib/settings";
-import { getEscortSubscriptionStatus } from "@/lib/escort-subscription";
+import { getSettingString } from "@/lib/settings";
+import { getEscortSubscriptionStatus, getEscortSubscriptionPricing } from "@/lib/escort-subscription";
 import { SubscribeButtons } from "./_buttons";
 
 export default async function EscortAbonnementPage() {
   const session = await auth();
   if (!session?.user) redirect("/connexion?callbackUrl=/escort/abonnement");
 
-  const [status, user, stdPrice, premPrice, vipPrice, days, recipientName, mtnNumber, orangeNumber, instructions, pendingPayment] =
+  const [status, user, stdPricing, premPricing, vipPricing, recipientName, mtnNumber, orangeNumber, instructions, pendingPayment] =
     await Promise.all([
       getEscortSubscriptionStatus(session.user.id),
       prisma.user.findUnique({
         where: { id: session.user.id },
         select: { phone: true },
       }),
-      getSettingNumber("pricing.escortSubscription.standard.amount", 2000),
-      getSettingNumber("pricing.escortSubscription.premium.amount", 5000),
-      getSettingNumber("pricing.escortSubscription.vip.amount", 15000),
-      getSettingNumber("pricing.escortSubscription.days", 30),
+      getEscortSubscriptionPricing("STANDARD"),
+      getEscortSubscriptionPricing("PREMIUM"),
+      getEscortSubscriptionPricing("VIP"),
       getSettingString("payment.manual.recipientName", ""),
       getSettingString("payment.manual.mtnNumber", "678876470"),
       getSettingString("payment.manual.orangeNumber", "640528712"),
@@ -45,7 +44,8 @@ export default async function EscortAbonnementPage() {
     {
       tier: "STANDARD" as const,
       name: "Standard",
-      monthly: stdPrice,
+      monthly: stdPricing.amount,
+      days: stdPricing.days,
       icon: Check,
       color: "border-border",
       features: ["1 annonce active", "3 photos max", "Tri normal", "Bump 500 FCFA/clic"],
@@ -53,7 +53,8 @@ export default async function EscortAbonnementPage() {
     {
       tier: "PREMIUM" as const,
       name: "Premium",
-      monthly: premPrice,
+      monthly: premPricing.amount,
+      days: premPricing.days,
       icon: Star,
       color: "border-primary/50",
       badge: "Recommandé",
@@ -62,7 +63,8 @@ export default async function EscortAbonnementPage() {
     {
       tier: "VIP" as const,
       name: "VIP",
-      monthly: vipPrice,
+      monthly: vipPricing.amount,
+      days: vipPricing.days,
       icon: Crown,
       color: "border-amber-500/50",
       badge: "Visibilité max",
@@ -77,7 +79,7 @@ export default async function EscortAbonnementPage() {
           <CreditCard className="h-7 w-7 text-primary" /> Mon abonnement
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Abonnement mensuel obligatoire pour publier. Paiement Mobile Money direct, activation par
+          Abonnement obligatoire pour publier. Paiement Mobile Money direct, activation par
           l'équipe Affinité après vérification.
         </p>
       </header>
@@ -158,7 +160,7 @@ export default async function EscortAbonnementPage() {
                   <h3 className="font-display text-2xl font-bold">{plan.name}</h3>
                   <p className="text-3xl font-bold">
                     {plan.monthly.toLocaleString("fr-FR")}{" "}
-                    <span className="text-sm font-normal text-muted-foreground">FCFA / {days}j</span>
+                    <span className="text-sm font-normal text-muted-foreground">FCFA / {plan.days}j</span>
                   </p>
                 </div>
                 <ul className="space-y-2 text-sm">

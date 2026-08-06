@@ -43,7 +43,7 @@ export default async function EscortProfilePage() {
   const [user, profile, ads, sub, latestVerif] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true, phone: true, image: true },
+      select: { id: true, name: true, email: true, phone: true, image: true, createdAt: true },
     }),
     prisma.escortProfile.findUnique({
       where: { userId },
@@ -271,22 +271,12 @@ export default async function EscortProfilePage() {
         )}
       </div>
 
-      {/* ─── COMPTE / SÉCURITÉ ──────────────────────────────────────── */}
+      {/* ─── COMPTE ───────────────────────────────────────────────── */}
       <Card>
-        <CardContent className="space-y-3 p-5">
-          <h2 className="font-display text-lg font-bold">Mon compte</h2>
-          <div className="grid gap-2 text-sm md:grid-cols-2">
-            <div>
-              <p className="text-xs text-muted-foreground">Email</p>
-              <p>{user.email ?? "—"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Téléphone</p>
-              <p>{user.phone ?? "—"}</p>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Pour modifier votre email ou mot de passe, contactez le{" "}
+        <CardContent className="space-y-2 p-5 text-xs text-muted-foreground">
+          <p>Inscrite {timeAgo(user.createdAt)}</p>
+          <p>
+            Pour modifier votre email, téléphone ou supprimer votre compte, contactez le{" "}
             <Link href="/escort/support" className="text-primary hover:underline">service client</Link>.
           </p>
         </CardContent>

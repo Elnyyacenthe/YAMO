@@ -36,6 +36,32 @@ export function SubscribeButtons({
   const total = Math.round(baseTotal * (1 - selected.discount / 100));
   const saved = baseTotal - total;
 
+  // Standard : période fixe unique (1 semaine), pas de sélecteur ni de remise.
+  if (tier === "STANDARD") {
+    return (
+      <div className="space-y-2 pt-2">
+        <ManualPayModal
+          trigger={
+            <Button className="w-full" size="sm">
+              Souscrire — {monthly.toLocaleString("fr-FR")} FCFA
+            </Button>
+          }
+          title="Abonnement STANDARD — 1 semaine"
+          description="Période fixe d'une semaine, sans engagement. Activation après vérification admin."
+          amount={monthly}
+          defaultPhone={defaultPhone}
+          recipientName={paymentInfo.recipientName}
+          mtnNumber={paymentInfo.mtnNumber}
+          orangeNumber={paymentInfo.orangeNumber}
+          instructions={paymentInfo.instructions}
+          declare={({ senderPhone, reference }) =>
+            declareManualSubscriptionPaymentAction({ tier, months: 1, senderPhone, reference })
+          }
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2 pt-2">
       <div className="grid grid-cols-3 gap-1">

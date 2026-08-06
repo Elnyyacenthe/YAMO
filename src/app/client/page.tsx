@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { AdGrid } from "@/components/ads/ad-grid";
+import { timeAgo } from "@/lib/utils";
 
 export default async function ClientDashboardPage() {
   const session = await auth();
@@ -20,6 +21,10 @@ export default async function ClientDashboardPage() {
       where: { id: userId },
       select: {
         name: true,
+        email: true,
+        phone: true,
+        username: true,
+        createdAt: true,
         _count: { select: { favorites: true } },
       },
     }),
@@ -116,6 +121,40 @@ export default async function ClientDashboardPage() {
         <CardContent className="p-6">
           <h2 className="mb-4 font-display text-xl font-bold">⭐ Sélection à découvrir</h2>
           <AdGrid ads={popularAds} priority={3} />
+        </CardContent>
+      </Card>
+
+      {/* ─── COMPTE ───────────────────────────────────────────────── */}
+      <Card>
+        <CardContent className="space-y-2 p-6">
+          <h2 className="font-display text-lg font-bold">Mon compte</h2>
+          <div className="grid gap-2 text-sm md:grid-cols-2">
+            {user?.email && (
+              <div>
+                <p className="text-xs text-muted-foreground">Email</p>
+                <p>{user.email}</p>
+              </div>
+            )}
+            {user?.phone && (
+              <div>
+                <p className="text-xs text-muted-foreground">Téléphone</p>
+                <p>{user.phone}</p>
+              </div>
+            )}
+            {user?.username && (
+              <div>
+                <p className="text-xs text-muted-foreground">Pseudo</p>
+                <p>{user.username}</p>
+              </div>
+            )}
+          </div>
+          {user?.createdAt && (
+            <p className="text-xs text-muted-foreground">Inscrit {timeAgo(user.createdAt)}</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Pour modifier votre email, téléphone ou supprimer votre compte, contactez le{" "}
+            <Link href="/client/support" className="text-primary hover:underline">service client</Link>.
+          </p>
         </CardContent>
       </Card>
     </div>

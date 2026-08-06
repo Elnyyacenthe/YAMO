@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard, Heart, User, Search, MapPin, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Heart, Search, MapPin, MessageSquare } from "lucide-react";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { MobileSidebar } from "@/components/dashboard/mobile-sidebar";
+import { LiveRefresh } from "@/components/dashboard/live-refresh";
 import { Separator } from "@/components/ui/separator";
 import { SITE_NAME } from "@/lib/utils";
 
@@ -35,7 +36,6 @@ export default async function ClientLayout({ children }: { children: React.React
           { href: "/client", label: "Vue d'ensemble", icon: <LayoutDashboard className="h-4 w-4" /> },
           { href: "/client/favoris", label: "Mes favoris", icon: <Heart className="h-4 w-4" />, badge: favCount },
           { href: "/client/support", label: "Service client", icon: <MessageSquare className="h-4 w-4" />, badge: unreadSupportReply },
-          { href: "/client/compte", label: "Mon compte", icon: <User className="h-4 w-4" /> },
         ]}
       />
       <Separator className="my-4" />
@@ -55,6 +55,7 @@ export default async function ClientLayout({ children }: { children: React.React
 
   return (
     <div className="grid min-h-screen md:grid-cols-[260px_1fr]">
+      <LiveRefresh />
       <MobileSidebar siteName={SITE_NAME}>{navContent}</MobileSidebar>
 
       <aside className="hidden border-b border-border/60 bg-card/40 backdrop-blur md:block md:border-b-0 md:border-r">

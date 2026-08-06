@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Search, User, LayoutDashboard, Shield, Heart, MapPin, Flame, Settings } from "lucide-react";
+import { Plus, Search, User, LayoutDashboard, Shield, Heart, MapPin, Flame } from "lucide-react";
 
 import { auth } from "@/auth";
 import { LogoutButton } from "@/components/auth/logout-button";
@@ -140,11 +140,6 @@ export async function Header() {
                             <User className="h-4 w-4" /> Mon profil
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href="/escort/compte">
-                            <Settings className="h-4 w-4" /> Mon compte
-                          </Link>
-                        </DropdownMenuItem>
                       </>
                     )}
                     {user.role === "CLIENT" && (
@@ -157,11 +152,6 @@ export async function Header() {
                         <DropdownMenuItem asChild>
                           <Link href="/client/favoris">
                             <Heart className="h-4 w-4" /> Mes favoris
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href="/client/compte">
-                            <Settings className="h-4 w-4" /> Mon compte
                           </Link>
                         </DropdownMenuItem>
                       </>

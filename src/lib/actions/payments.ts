@@ -188,26 +188,9 @@ export async function initiateServicePhotoAction(input: {
   });
 }
 
-// =====================================================================
-// VERIFICATION KYC — 3000 FCFA
-// =====================================================================
-
-export async function initiateVerificationAction(input: {
-  phone: string;
-}): Promise<InitPaymentResult> {
-  const session = await auth();
-  if (!session?.user) return err("Non authentifié");
-  if (!(await rl(`verif:${session.user.id}`)).success) return err("Trop de tentatives");
-
-  const amount = await getSettingNumber("pricing.verification.amount", 3000);
-  return kpayOneShotPayment({
-    userId: session.user.id,
-    amount,
-    phone: input.phone,
-    intent: { type: "VERIFICATION", payload: { userId: session.user.id } },
-    description: `AFFINITE - Verification identite`,
-  });
-}
+// Note (2026-08-05) : la vérification d'identité n'utilise plus K-Pay.
+// Voir declareManualVerificationPaymentAction dans @/lib/actions/manual-payment —
+// paiement Mobile Money direct + documents envoyés sur Telegram après paiement.
 
 // Note v3 (2026-06-11) : suppression des actions client-facing payantes.
 // Les seuls payeurs sur Affinité sont maintenant les ESCORTES (abonnement mensuel

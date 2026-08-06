@@ -26,7 +26,11 @@ export default async function ClientSupportPage() {
         </p>
       </header>
 
-      <SupportThread messages={ticket?.messages ?? []} />
+      <SupportThread
+        messages={ticket?.messages ?? []}
+        currentUserName={session.user.name}
+        currentUserImage={session.user.image}
+      />
     </div>
   );
 }
