@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Loader2, Sparkles, Heart } from "lucide-react";
+import { Loader2, Sparkles, Heart, Gift } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,14 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { registerAction, clientQuickAuthAction, type AuthState } from "@/lib/actions/auth";
+
+/** Offre d'essai gratuit affichée aux futures escortes (réglée dans /admin/reglages). */
+export interface TrialOffer {
+  enabled: boolean;
+  tier: string;
+  /** Durée lisible : « 1 mois », « 15 jours »… */
+  label: string;
+}
 
 /** Inscription CLIENT — juste un pseudo + mot de passe, aucune donnée personnelle. */
 function ClientRegisterForm() {
@@ -86,7 +94,7 @@ function ClientRegisterForm() {
 }
 
 /** Inscription ESCORT — flux complet (email, téléphone, abonnement). */
-function EscortRegisterForm() {
+function EscortRegisterForm({ trial }: { trial: TrialOffer }) {
   const [state, formAction, pending] = useActionState<AuthState | null, FormData>(
     registerAction,
     null,
@@ -99,7 +107,11 @@ function EscortRegisterForm() {
 
   useEffect(() => {
     if (state?.ok) {
-      toast.success("Compte créé 🎉 — souscrivez maintenant à un plan pour publier vos annonces");
+      toast.success(
+        state.freeTrial
+          ? `Compte créé 🎉 — ${state.freeTrial.label} d'abonnement ${state.freeTrial.tier} offert, publiez dès maintenant !`
+          : "Compte créé 🎉 — souscrivez maintenant à un plan pour publier vos annonces",
+      );
       window.location.assign(state.redirectTo ?? "/escort/abonnement");
     } else if (state && !state.ok) {
       toast.error(state.error);
@@ -119,8 +131,17 @@ function EscortRegisterForm() {
           Devenir escort sur Affinité
         </CardTitle>
         <CardDescription>
-          Publiez vos annonces auprès de milliers de clients camerounais. Inscription gratuite,
-          abonnement à partir de <strong>2 500 FCFA / semaine</strong>.
+          Publiez vos annonces auprès de milliers de clients camerounais.{" "}
+          {trial.enabled ? (
+            <>
+              Inscription gratuite et <strong>{trial.label} d&apos;abonnement {trial.tier} offert</strong> —
+              aucun paiement demandé pour démarrer.
+            </>
+          ) : (
+            <>
+              Inscription gratuite, abonnement à partir de <strong>2 500 FCFA / semaine</strong>.
+            </>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -181,10 +202,21 @@ function EscortRegisterForm() {
             </div>
           </div>
 
-          <p className="rounded bg-primary/10 p-3 text-xs text-primary">
-            💡 Après l'inscription, vous serez redirigée vers la page d'abonnement pour activer
-            votre compte (Standard 2 000, Premium 5 000 ou VIP 15 000 FCFA / mois).
-          </p>
+          {trial.enabled ? (
+            <div className="flex items-start gap-2 rounded border border-violet-500/40 bg-violet-500/10 p-3 text-xs text-violet-200">
+              <Gift className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>
+                <strong>{trial.label} offert</strong> : votre abonnement {trial.tier} est activé
+                automatiquement dès la création du compte. Vous pouvez publier immédiatement, sans
+                rien payer. À la fin de l&apos;essai, choisissez un abonnement pour rester en ligne.
+              </span>
+            </div>
+          ) : (
+            <p className="rounded bg-primary/10 p-3 text-xs text-primary">
+              💡 Après l&apos;inscription, vous serez redirigée vers la page d&apos;abonnement pour
+              activer votre compte (Standard, Premium ou VIP).
+            </p>
+          )}
 
           <Button type="submit" disabled={pending} className="w-full" size="lg">
             {pending && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -210,8 +242,12 @@ function EscortRegisterForm() {
   );
 }
 
-export function RegisterForm() {
+export function RegisterForm({ trial }: { trial?: TrialOffer }) {
   const searchParams = useSearchParams();
   const isClient = searchParams.get("role") === "CLIENT";
-  return isClient ? <ClientRegisterForm /> : <EscortRegisterForm />;
+  return isClient ? (
+    <ClientRegisterForm />
+  ) : (
+    <EscortRegisterForm trial={trial ?? { enabled: false, tier: "STANDARD", label: "1 mois" }} />
+  );
 }

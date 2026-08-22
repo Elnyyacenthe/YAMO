@@ -1,21 +1,27 @@
 import { redirect } from "next/navigation";
-import { CreditCard, Check, Crown, Star, Sparkles, AlertTriangle, Clock } from "lucide-react";
+import { CreditCard, Check, Crown, Star, Sparkles, AlertTriangle, Clock, Gift } from "lucide-react";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getSettingString } from "@/lib/settings";
-import { getEscortSubscriptionStatus, getEscortSubscriptionPricing } from "@/lib/escort-subscription";
+import {
+  getEscortSubscriptionStatus,
+  getEscortSubscriptionPricing,
+  getFreeTrialConfig,
+  formatTrialDuration,
+} from "@/lib/escort-subscription";
 import { SubscribeButtons } from "./_buttons";
 
 export default async function EscortAbonnementPage() {
   const session = await auth();
   if (!session?.user) redirect("/connexion?callbackUrl=/escort/abonnement");
 
-  const [status, user, stdPricing, premPricing, vipPricing, recipientName, mtnNumber, orangeNumber, instructions, pendingPayment] =
+  const [status, trialConfig, user, stdPricing, premPricing, vipPricing, recipientName, mtnNumber, orangeNumber, instructions, pendingPayment, paidSubscriptions] =
     await Promise.all([
       getEscortSubscriptionStatus(session.user.id),
+      getFreeTrialConfig(),
       prisma.user.findUnique({
         where: { id: session.user.id },
         select: { phone: true },
@@ -36,9 +42,20 @@ export default async function EscortAbonnementPage() {
         },
         orderBy: { createdAt: "desc" },
       }),
+      // A-t-elle déjà payé un abonnement ? Sert à distinguer « essai terminé »
+      // d'un abonnement payant simplement arrivé à échéance.
+      prisma.payment.count({
+        where: {
+          userId: session.user.id,
+          status: "PAID",
+          intent: { path: ["type"], equals: "ESCORT_SUBSCRIPTION" },
+        },
+      }),
     ]);
 
   const manualPaymentInfo = { recipientName, mtnNumber, orangeNumber, instructions };
+  /** Essai consommé, jamais payé ensuite → on affiche le message « fin d'essai ». */
+  const trialJustEnded = !!status.trialEndsAt && !status.isActive && paidSubscriptions === 0;
 
   const PLANS = [
     {
@@ -81,6 +98,9 @@ export default async function EscortAbonnementPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Abonnement obligatoire pour publier. Paiement Mobile Money direct, activation par
           l'équipe Affinité après vérification.
+          {trialConfig.enabled && !status.trialEndsAt && (
+            <> Les nouvelles escortes profitent de <strong>{formatTrialDuration(trialConfig.days)} offert{formatTrialDuration(trialConfig.days).startsWith("1 ") ? "" : "s"}</strong>.</>
+          )}
         </p>
       </header>
 
@@ -102,7 +122,31 @@ export default async function EscortAbonnementPage() {
       )}
 
       {/* Statut actuel */}
-      {status.isActive ? (
+      {status.isTrial ? (
+        <Card className="border-violet-500/40 bg-violet-500/10">
+          <CardContent className="flex flex-col gap-3 p-6 md:flex-row md:items-center">
+            <Gift className="h-10 w-10 text-violet-400" />
+            <div className="flex-1">
+              <p className="font-display text-lg font-bold">
+                Essai gratuit <span className="gradient-text">{status.tier}</span> en cours
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Offert jusqu'au <strong>{status.until!.toLocaleDateString("fr-FR")}</strong>{" "}
+                ({status.daysLeft} jour{status.daysLeft > 1 ? "s" : ""} restant{status.daysLeft > 1 ? "s" : ""}).
+                Vous publiez normalement pendant toute la durée de l'essai.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Quotas : {status.caps.ads} annonce{status.caps.ads > 1 ? "s" : ""} active{status.caps.ads > 1 ? "s" : ""} · {status.caps.photos} photos / annonce
+              </p>
+              <p className="mt-2 text-sm font-medium text-violet-300">
+                ⚠️ À la fin de l'essai, vos annonces seront mises en pause. Choisissez un abonnement
+                ci-dessous pour rester en ligne — le temps payé s'ajoute à la fin de votre essai.
+              </p>
+            </div>
+            <Badge variant="vip">ESSAI GRATUIT</Badge>
+          </CardContent>
+        </Card>
+      ) : status.isActive ? (
         <Card className="border-emerald-500/40 bg-emerald-500/10">
           <CardContent className="flex flex-col gap-3 p-6 md:flex-row md:items-center">
             <Sparkles className="h-10 w-10 text-emerald-400" />
@@ -128,9 +172,13 @@ export default async function EscortAbonnementPage() {
           <CardContent className="flex items-start gap-3 p-6">
             <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-400" />
             <div>
-              <p className="font-semibold">Aucun abonnement actif</p>
+              <p className="font-semibold">
+                {trialJustEnded ? "Votre essai gratuit est terminé" : "Aucun abonnement actif"}
+              </p>
               <p className="text-sm text-muted-foreground">
-                Vous ne pouvez pas publier d'annonce. Souscrivez à l'un des plans ci-dessous pour activer votre compte escort sur Affinité.
+                {trialJustEnded
+                  ? `Votre période d'essai s'est achevée le ${status.trialEndsAt!.toLocaleDateString("fr-FR")} et vos annonces sont en pause. Choisissez un abonnement ci-dessous pour les remettre en ligne.`
+                  : "Vous ne pouvez pas publier d'annonce. Souscrivez à l'un des plans ci-dessous pour activer votre compte escort sur Affinité."}
               </p>
             </div>
           </CardContent>

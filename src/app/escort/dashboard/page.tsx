@@ -107,23 +107,33 @@ export default async function EscortProfilePage() {
 
       {/* ─── STATUT ABONNEMENT ───────────────────────────────────────── */}
       {sub.isActive ? (
-        <Card className="border-emerald-500/40 bg-emerald-500/5">
+        <Card
+          className={
+            sub.isTrial
+              ? "border-violet-500/40 bg-violet-500/5"
+              : "border-emerald-500/40 bg-emerald-500/5"
+          }
+        >
           <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center">
-            <Sparkles className="h-8 w-8 text-emerald-400" />
+            <Sparkles className={`h-8 w-8 ${sub.isTrial ? "text-violet-400" : "text-emerald-400"}`} />
             <div className="flex-1">
               <p className="font-semibold">
-                Abonnement <span className="gradient-text">{sub.tier}</span> actif
+                {sub.isTrial ? "Essai gratuit " : "Abonnement "}
+                <span className="gradient-text">{sub.tier}</span>
+                {sub.isTrial ? " en cours" : " actif"}
               </p>
               <p className="text-xs text-muted-foreground">
-                Expire dans <strong>{sub.daysLeft}j</strong> · Quotas : {sub.caps.ads} annonce
+                {sub.isTrial ? "Se termine dans " : "Expire dans "}
+                <strong>{sub.daysLeft}j</strong> · Quotas : {sub.caps.ads} annonce
                 {sub.caps.ads > 1 ? "s" : ""} max · {sub.caps.photos} photos / annonce
+                {sub.isTrial && " · Souscrivez avant la fin pour rester en ligne"}
               </p>
             </div>
             <Badge variant="outline">
               {activeCount}/{sub.caps.ads} annonces utilisées
             </Badge>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/escort/abonnement">Gérer</Link>
+            <Button asChild variant={sub.isTrial ? "default" : "outline"} size="sm">
+              <Link href="/escort/abonnement">{sub.isTrial ? "S'abonner" : "Gérer"}</Link>
             </Button>
           </CardContent>
         </Card>

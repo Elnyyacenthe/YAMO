@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Sparkles, Shield } from "lucide-react";
+import { Sparkles, Shield, Gift } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { AdForm } from "@/components/ads/ad-form";
+import { getFreeTrialConfig, formatTrialDuration } from "@/lib/escort-subscription";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -15,10 +16,13 @@ export const metadata: Metadata = {
 
 export default async function PostAdPage() {
   const session = await auth();
-  const cities = await prisma.city.findMany({
-    select: { id: true, name: true },
-    orderBy: [{ isPopular: "desc" }, { name: "asc" }],
-  });
+  const [cities, trial] = await Promise.all([
+    prisma.city.findMany({
+      select: { id: true, name: true },
+      orderBy: [{ isPopular: "desc" }, { name: "asc" }],
+    }),
+    getFreeTrialConfig(),
+  ]);
 
   if (!session?.user) {
     return (
@@ -29,6 +33,12 @@ export default async function PostAdPage() {
             <p className="text-sm text-muted-foreground">
               Vous devez avoir un compte pour publier une annonce.
             </p>
+            {trial.enabled && (
+              <p className="flex items-center justify-center gap-2 rounded-lg border border-violet-500/40 bg-violet-500/10 p-3 text-sm font-medium text-violet-200">
+                <Gift className="h-4 w-4 shrink-0" />
+                Nouvelle escorte : {formatTrialDuration(trial.days)} d&apos;abonnement {trial.tier} offert
+              </p>
+            )}
             <div className="flex flex-col gap-2">
               <Button asChild>
                 <Link href="/connexion">Se connecter</Link>
@@ -77,6 +87,12 @@ export default async function PostAdPage() {
               Seuls les comptes <strong>Escort</strong> peuvent publier des annonces. Convertissez
               votre compte client en quelques clics — vous gardez vos favoris et votre historique.
             </p>
+            {trial.enabled && (
+              <p className="flex items-center justify-center gap-2 rounded-lg border border-violet-500/40 bg-violet-500/10 p-3 text-sm font-medium text-violet-200">
+                <Gift className="h-4 w-4 shrink-0" />
+                {formatTrialDuration(trial.days)} d&apos;abonnement {trial.tier} offert dès la conversion
+              </p>
+            )}
             <div className="flex flex-col gap-2">
               <Button asChild size="lg">
                 <Link href="/client/devenir-escort">

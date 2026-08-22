@@ -12,6 +12,7 @@ import { signIn, signOut } from "@/auth";
 import { signUpSchema, signInSchema, USERNAME_REGEX } from "@/lib/validations/auth";
 import { rateLimit, RL } from "@/lib/rate-limit";
 import { getSettingNumber } from "@/lib/settings";
+import { grantEscortFreeTrial, formatTrialDuration } from "@/lib/escort-subscription";
 import { getDashboardNamespace } from "@/lib/dashboard-namespace";
 import { formatCameroonPhone } from "@/lib/phone";
 import type { Role } from "@prisma/client";
@@ -22,6 +23,8 @@ export type AuthState =
       /** URL où le client doit naviguer après login (interne /admin OU externe dashboard.affinité.com). */
       redirectTo?: string;
       nextStep?: { type: "PAYMENT"; tier: "PREMIUM" | "VIP"; amount: number };
+      /** v21 — Essai gratuit accordé à l'inscription (null si désactivé/inéligible). */
+      freeTrial?: { tier: string; days: number; label: string; until: string };
     }
   | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
 
@@ -178,13 +181,37 @@ export async function registerAction(_prev: AuthState | null, formData: FormData
     }).catch(() => null);
   }
 
+  // v21 — Premier mois offert aux nouvelles escortes (si activé côté admin).
+  // Échec silencieux : une erreur ici ne doit jamais bloquer l'inscription.
+  let freeTrial: { tier: string; days: number; label: string; until: string } | undefined;
+  if (role === "ESCORT") {
+    const trial = await grantEscortFreeTrial(user.id).catch(() => null);
+    if (trial?.granted) {
+      freeTrial = {
+        tier: trial.tier,
+        days: trial.days,
+        label: formatTrialDuration(trial.days),
+        until: trial.until.toISOString(),
+      };
+      await prisma.notification.create({
+        data: {
+          userId: user.id,
+          title: `Bienvenue — ${freeTrial.label} offert${freeTrial.label.startsWith("1 ") ? "" : "s"} 🎁`,
+          body: `Votre abonnement ${trial.tier} est actif gratuitement jusqu'au ${trial.until.toLocaleDateString("fr-FR")}. Publiez vos annonces dès maintenant ! À la fin de l'essai, choisissez un abonnement pour rester en ligne.`,
+          link: "/escort/abonnement",
+        },
+      }).catch(() => null);
+    }
+  }
+
   // Auto-login
   await signIn("credentials", { identifier: email, password, redirect: false });
 
   // v3 — Tous les nouveaux comptes ESCORT vont vers /escort/abonnement
-  // (sans abonnement actif, ils ne peuvent rien faire).
+  // (sans abonnement actif, ils ne peuvent rien faire — avec l'essai gratuit,
+  // la page confirme l'activation et affiche la date de fin d'essai).
   if (role === "ESCORT") {
-    return { ok: true, redirectTo: "/escort/abonnement" };
+    return { ok: true, redirectTo: "/escort/abonnement", freeTrial };
   }
 
   return { ok: true, redirectTo: destinationForRole(role) };

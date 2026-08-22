@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { slugify } from "@/lib/utils";
 import { PHONE_REGEX } from "@/lib/validations/auth";
 import { formatCameroonPhone } from "@/lib/phone";
+import { grantEscortFreeTrial, formatTrialDuration } from "@/lib/escort-subscription";
 
 export type BecomeEscortState =
   | { ok: true }
@@ -84,6 +85,10 @@ export async function becomeEscortAction(
       data: { role: "ESCORT", phone },
     });
 
+    // v21 — Premier mois offert : une conversion client → escort compte
+    // comme une nouvelle escorte. Accordé une seule fois par compte.
+    const trial = await grantEscortFreeTrial(user.id, tx);
+
     if (!user.escortProfile) {
       await tx.escortProfile.create({
         data: {
@@ -107,8 +112,10 @@ export async function becomeEscortAction(
     await tx.notification.create({
       data: {
         userId: user.id,
-        title: "Bienvenue côté Escort 💃",
-        body: "Votre compte a été converti. Vous pouvez maintenant publier des annonces et accéder au dashboard.",
+        title: trial.granted ? "Bienvenue côté Escort 💃🎁" : "Bienvenue côté Escort 💃",
+        body: trial.granted
+          ? `Votre compte a été converti et votre abonnement ${trial.tier} vous est offert pendant ${formatTrialDuration(trial.days)}, jusqu'au ${trial.until.toLocaleDateString("fr-FR")}. Publiez vos annonces dès maintenant !`
+          : "Votre compte a été converti. Vous pouvez maintenant publier des annonces et accéder au dashboard.",
         link: "/escort/dashboard",
       },
     });

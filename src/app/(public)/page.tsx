@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ShieldCheck, Crown, MapPin, Flame } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
+import { getFreeTrialConfig, formatTrialDuration } from "@/lib/escort-subscription";
 import { Button } from "@/components/ui/button";
 import { AdGrid } from "@/components/ads/ad-grid";
 import { CityCard } from "@/components/ads/city-card";
@@ -10,7 +11,7 @@ import { CityCard } from "@/components/ads/city-card";
 export const revalidate = 300; // 5 min ISR
 
 export default async function HomePage() {
-  const [vipAds, recentAds, cities, totalAds, totalVerified] = await Promise.all([
+  const [vipAds, recentAds, cities, totalAds, totalVerified, trial] = await Promise.all([
     prisma.ad.findMany({
       where: { status: "ACTIVE", tier: "VIP" },
       include: {
@@ -50,6 +51,7 @@ export default async function HomePage() {
     }),
     prisma.ad.count({ where: { status: "ACTIVE" } }),
     prisma.escortProfile.count({ where: { isVerified: true } }),
+    getFreeTrialConfig(),
   ]);
 
   // 8 photos pour la mosaïque background du hero
@@ -121,7 +123,9 @@ export default async function HomePage() {
                 href="/inscription?role=ESCORT"
                 className="font-semibold text-accent underline-offset-4 hover:underline"
               >
-                Créer mon compte gratuit →
+                {trial.enabled
+                  ? `Créer mon compte — ${formatTrialDuration(trial.days)} offert →`
+                  : "Créer mon compte gratuit →"}
               </Link>
             </div>
           </div>
@@ -214,11 +218,27 @@ export default async function HomePage() {
           <h2 className="font-display text-4xl font-bold md:text-5xl">
             Vous êtes escort ? <span className="gradient-text">Augmentez vos revenus</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            Créez votre compte gratuitement, publiez votre annonce dès 2 500 FCFA / semaine, atteignez des milliers de clients sérieux, et boostez votre visibilité avec nos options Premium et VIP.
-          </p>
+          {trial.enabled ? (
+            <>
+              <div className="mx-auto mt-6 inline-flex items-center gap-2 rounded-full border border-violet-400/50 bg-violet-500/15 px-4 py-1.5 text-sm font-semibold text-violet-200">
+                🎁 {formatTrialDuration(trial.days)} d&apos;abonnement {trial.tier} offert à l&apos;inscription
+              </div>
+              <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+                Créez votre compte et publiez immédiatement, <strong>sans rien payer pendant{" "}
+                {formatTrialDuration(trial.days)}</strong>. Atteignez des milliers de clients sérieux ;
+                à la fin de l&apos;essai, choisissez l&apos;abonnement qui vous convient (dès 2 500 FCFA
+                / semaine).
+              </p>
+            </>
+          ) : (
+            <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+              Créez votre compte gratuitement, publiez votre annonce dès 2 500 FCFA / semaine, atteignez des milliers de clients sérieux, et boostez votre visibilité avec nos options Premium et VIP.
+            </p>
+          )}
           <Button asChild size="xl" className="mt-8">
-            <Link href="/inscription?role=ESCORT">Créer mon compte gratuit</Link>
+            <Link href="/inscription?role=ESCORT">
+              {trial.enabled ? "Créer mon compte et profiter de l'essai" : "Créer mon compte gratuit"}
+            </Link>
           </Button>
         </div>
       </section>

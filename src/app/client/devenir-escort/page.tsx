@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Star, BadgeCheck, BarChart3 } from "lucide-react";
+import { Sparkles, Star, BadgeCheck, BarChart3, Gift } from "lucide-react";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { BecomeEscortForm } from "./_form";
+import { getFreeTrialConfig, formatTrialDuration } from "@/lib/escort-subscription";
 
 const PERKS = [
   { icon: Sparkles, title: "Publier des annonces", text: "Atteignez des milliers de clients dans votre ville." },
@@ -28,10 +29,17 @@ export default async function BecomeEscortPage() {
     redirect(url);
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { phone: true },
-  });
+  const [user, trial] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { phone: true, escortTrialEndsAt: true },
+    }),
+    getFreeTrialConfig(),
+  ]);
+
+  // L'essai n'est offert qu'une fois : inutile de le promettre à un compte
+  // qui l'a déjà consommé (ex. ancienne escorte repassée cliente).
+  const showTrialOffer = trial.enabled && !user?.escortTrialEndsAt;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -48,6 +56,24 @@ export default async function BecomeEscortPage() {
           historique. Vous accédez en plus à toutes les fonctionnalités escort.
         </p>
       </header>
+
+      {showTrialOffer && (
+        <Card className="border-violet-500/40 bg-violet-500/10">
+          <CardContent className="flex items-start gap-3 p-5">
+            <Gift className="mt-0.5 h-6 w-6 shrink-0 text-violet-400" />
+            <div>
+              <p className="font-display text-lg font-bold">
+                {formatTrialDuration(trial.days)} d&apos;abonnement {trial.tier} offert
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Votre abonnement est activé automatiquement dès la conversion : vous publiez tout de
+                suite, sans rien payer. À la fin de l&apos;essai, vos annonces sont mises en pause
+                jusqu&apos;à la souscription d&apos;un abonnement.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Avantages */}
       <div className="grid gap-3 md:grid-cols-2">

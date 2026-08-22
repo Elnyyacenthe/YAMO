@@ -69,15 +69,27 @@ export default async function EscortLayout({ children }: { children: React.React
       {/* Bandeau statut abonnement */}
       <div className="border-b border-border/40 p-4">
         {sub.isActive ? (
-          <Link href="/escort/abonnement" className="block rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 transition hover:border-emerald-500/60">
+          <Link
+            href="/escort/abonnement"
+            className={`block rounded-lg border p-3 transition ${
+              sub.isTrial
+                ? "border-violet-500/40 bg-violet-500/10 hover:border-violet-500"
+                : "border-emerald-500/30 bg-emerald-500/10 hover:border-emerald-500/60"
+            }`}
+          >
             <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-2 text-xs font-bold text-emerald-300">
-                <Sparkles className="h-3.5 w-3.5" /> {sub.tier}
+              <span
+                className={`flex items-center gap-2 text-xs font-bold ${
+                  sub.isTrial ? "text-violet-300" : "text-emerald-300"
+                }`}
+              >
+                <Sparkles className="h-3.5 w-3.5" /> {sub.isTrial ? `Essai ${sub.tier}` : sub.tier}
               </span>
               <Badge variant="success" className="text-[10px]">{sub.daysLeft}j</Badge>
             </div>
             <p className="mt-1 text-[10px] text-muted-foreground">
-              Expire le {sub.until?.toLocaleDateString("fr-FR")}
+              {sub.isTrial ? "Essai gratuit jusqu'au" : "Expire le"}{" "}
+              {sub.until?.toLocaleDateString("fr-FR")}
             </p>
           </Link>
         ) : (

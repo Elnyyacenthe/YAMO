@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Crown, Star, Check } from "lucide-react";
+import { Crown, Star, Check, Gift } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatXAF } from "@/lib/utils";
-import { getEscortSubscriptionPricing } from "@/lib/escort-subscription";
+import { getEscortSubscriptionPricing, getFreeTrialConfig, formatTrialDuration } from "@/lib/escort-subscription";
 
 export const metadata: Metadata = { title: "Tarifs Premium" };
 
 export default async function PricingPage() {
-  const [stdPricing, premPricing, vipPricing] = await Promise.all([
+  const [stdPricing, premPricing, vipPricing, trial] = await Promise.all([
     getEscortSubscriptionPricing("STANDARD"),
     getEscortSubscriptionPricing("PREMIUM"),
     getEscortSubscriptionPricing("VIP"),
+    getFreeTrialConfig(),
   ]);
 
   const PLANS = [
@@ -70,6 +71,28 @@ export default async function PricingPage() {
         <p className="mt-4 text-muted-foreground">
           Choisissez l'offre qui vous correspond. Aucun engagement, payez uniquement pour la période choisie.
         </p>
+
+        {/* v21 — l'offre d'essai est pilotée depuis le dashboard admin : si elle est
+            désactivée, ce bandeau disparaît automatiquement du site. */}
+        {trial.enabled && (
+          <div className="mt-6 rounded-2xl border border-violet-500/40 bg-violet-500/10 p-5 text-left sm:text-center">
+            <p className="flex items-center justify-center gap-2 font-display text-xl font-bold">
+              <Gift className="h-5 w-5 text-violet-400" />
+              Nouvelle escorte ? {formatTrialDuration(trial.days)} offert
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              À l'inscription, votre abonnement <strong>{trial.tier}</strong> est activé{" "}
+              <strong>gratuitement pendant {formatTrialDuration(trial.days)}</strong> — vous publiez
+              immédiatement, sans rien payer. Ensuite seulement, vous choisissez l'offre qui vous
+              convient parmi celles ci-dessous.
+            </p>
+            <Button asChild className="mt-4">
+              <Link href="/inscription?role=ESCORT">
+                <Gift className="h-4 w-4" /> Profiter de {formatTrialDuration(trial.days)} offert
+              </Link>
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="mx-auto mt-12 grid max-w-5xl gap-6 md:grid-cols-3">
@@ -77,10 +100,16 @@ export default async function PricingPage() {
           const Icon = plan.icon;
           return (
             <Card key={plan.tier} className={plan.tier === "VIP" ? "border-amber-500/50" : ""}>
-              {plan.badge && (
-                <Badge variant="vip" className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  {plan.badge}
+              {trial.enabled && plan.tier === trial.tier ? (
+                <Badge variant="vip" className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                  🎁 {formatTrialDuration(trial.days)} offert
                 </Badge>
+              ) : (
+                plan.badge && (
+                  <Badge variant="vip" className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    {plan.badge}
+                  </Badge>
+                )
               )}
               <CardContent className="space-y-4 p-8">
                 <Icon className="h-10 w-10 text-primary" />
