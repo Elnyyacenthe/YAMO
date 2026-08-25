@@ -245,9 +245,34 @@ function EscortRegisterForm({ trial }: { trial: TrialOffer }) {
 export function RegisterForm({ trial }: { trial?: TrialOffer }) {
   const searchParams = useSearchParams();
   const isClient = searchParams.get("role") === "CLIENT";
-  return isClient ? (
-    <ClientRegisterForm />
-  ) : (
-    <EscortRegisterForm trial={trial ?? { enabled: false, tier: "STANDARD", label: "1 mois" }} />
+  return (
+    <div>
+      <RoleSwitch active={isClient ? "CLIENT" : "ESCORT"} />
+      {isClient ? (
+        <ClientRegisterForm />
+      ) : (
+        <EscortRegisterForm trial={trial ?? { enabled: false, tier: "STANDARD", label: "1 mois" }} />
+      )}
+    </div>
+  );
+}
+
+/** Sélecteur de rôle bien visible : oriente d'emblée escorte vs client. */
+function RoleSwitch({ active }: { active: "ESCORT" | "CLIENT" }) {
+  const base =
+    "flex flex-col items-center gap-0.5 rounded-lg px-3 py-2 text-center text-sm font-medium transition";
+  const on = "bg-primary text-primary-foreground shadow";
+  const off = "text-muted-foreground hover:bg-secondary";
+  return (
+    <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl border border-border/60 bg-secondary/30 p-1">
+      <Link href="/inscription" className={`${base} ${active === "ESCORT" ? on : off}`}>
+        💃 Je veux publier
+        <span className="text-[11px] font-normal opacity-80">Compte escorte</span>
+      </Link>
+      <Link href="/inscription?role=CLIENT" className={`${base} ${active === "CLIENT" ? on : off}`}>
+        🔍 Je cherche
+        <span className="text-[11px] font-normal opacity-80">Compte client</span>
+      </Link>
+    </div>
   );
 }

@@ -7,7 +7,7 @@ export const adSchema = z
     title: z.string().min(10, "Titre trop court (10 caractères minimum)").max(120),
     description: z
       .string()
-      .min(50, "Description trop courte (50 caractères minimum)")
+      .min(30, "Ajoutez quelques mots de plus (30 caractères minimum)")
       .max(3000),
     cityId: z.string().cuid("Ville requise"),
     neighborhood: z.string().max(80).optional(),

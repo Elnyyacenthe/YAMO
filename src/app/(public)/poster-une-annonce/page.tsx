@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { AdForm } from "@/components/ads/ad-form";
 import { getFreeTrialConfig, formatTrialDuration } from "@/lib/escort-subscription";
+import { uploadsEnabled } from "@/lib/uploads";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -145,7 +146,7 @@ export default async function PostAdPage() {
           Votre annonce sera examinée par notre équipe sous 24h avant publication.
         </p>
         <div className="mt-8">
-          <AdForm cities={cities} accountPhone={owner.phone} />
+          <AdForm cities={cities} accountPhone={owner.phone} uploadsEnabled={uploadsEnabled()} />
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { sendSupportMessageAction } from "@/lib/actions/support";
 import type { OurFileRouter } from "@/lib/uploadthing";
+import { friendlyUploadError } from "@/lib/upload-errors";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
@@ -89,7 +90,8 @@ export function SupportThread({
       if (res?.[0]) setAttachment({ url: res[0].url, name: res[0].name });
     },
     onUploadError: (err) => {
-      toast.error(err.message);
+      console.error("[upload support]", err);
+      toast.error(friendlyUploadError(err));
     },
   });
 

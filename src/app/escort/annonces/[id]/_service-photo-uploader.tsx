@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { formatXAF } from "@/lib/utils";
 import type { OurFileRouter } from "@/lib/uploadthing";
+import { friendlyUploadError } from "@/lib/upload-errors";
 import { initiateServicePhotoAction } from "@/lib/actions/payments";
 import { KpayPayModal } from "@/components/kpay/kpay-pay-modal";
 
@@ -40,7 +41,8 @@ export function ServicePhotoUploader({ adId, price, defaultPhone }: Props) {
     },
     onUploadError: (err) => {
       setUploading(false);
-      toast.error(err.message);
+      console.error("[upload photo service]", err);
+      toast.error(friendlyUploadError(err));
     },
   });
 

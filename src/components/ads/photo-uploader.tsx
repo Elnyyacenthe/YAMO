@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { generateReactHelpers } from "@uploadthing/react";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, ImageOff } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import type { OurFileRouter } from "@/lib/uploadthing";
+import { friendlyUploadError } from "@/lib/upload-errors";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
@@ -15,9 +16,11 @@ interface Props {
   value: string[];
   onChange: (urls: string[]) => void;
   max?: number;
+  /** Passé à false quand le service d'upload n'est pas configuré côté serveur. */
+  enabled?: boolean;
 }
 
-export function PhotoUploader({ value, onChange, max = 10 }: Props) {
+export function PhotoUploader({ value, onChange, max = 10, enabled = true }: Props) {
   const [loading, setLoading] = useState(false);
 
   const { startUpload } = useUploadThing("adPhotos", {
@@ -28,9 +31,27 @@ export function PhotoUploader({ value, onChange, max = 10 }: Props) {
     },
     onUploadError: (err) => {
       setLoading(false);
-      toast.error(err.message);
+      // Détail technique pour l'équipe, message clair pour l'utilisatrice.
+      console.error("[upload photo]", err);
+      toast.error(friendlyUploadError(err));
     },
   });
+
+  // Service d'upload indisponible (token manquant) : on n'appelle jamais le
+  // SDK — sinon il renvoie une erreur technique illisible.
+  if (!enabled) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-amber-500/40 bg-amber-500/5 p-6 text-center">
+        <ImageOff className="h-8 w-8 text-amber-400" />
+        <p className="text-sm font-medium text-amber-200">
+          L&apos;ajout de photos est momentanément indisponible.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Notre équipe est prévenue. Réessayez un peu plus tard, ou contactez le support si c&apos;est urgent.
+        </p>
+      </div>
+    );
+  }
 
   function remove(idx: number) {
     onChange(value.filter((_, i) => i !== idx));

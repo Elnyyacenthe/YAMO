@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import type { OurFileRouter } from "@/lib/uploadthing";
+import { friendlyUploadError } from "@/lib/upload-errors";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
@@ -14,9 +15,11 @@ interface Props {
   value: string[];
   onChange: (urls: string[]) => void;
   max?: number;
+  /** Passé à false quand le service d'upload n'est pas configuré côté serveur. */
+  enabled?: boolean;
 }
 
-export function VideoUploader({ value, onChange, max = 3 }: Props) {
+export function VideoUploader({ value, onChange, max = 3, enabled = true }: Props) {
   const [loading, setLoading] = useState(false);
 
   const { startUpload } = useUploadThing("adVideos", {
@@ -27,9 +30,13 @@ export function VideoUploader({ value, onChange, max = 3 }: Props) {
     },
     onUploadError: (err) => {
       setLoading(false);
-      toast.error(err.message);
+      console.error("[upload vidéo]", err);
+      toast.error(friendlyUploadError(err));
     },
   });
+
+  // Service indisponible : on masque simplement l'ajout vidéo (c'est facultatif).
+  if (!enabled) return null;
 
   function remove(idx: number) {
     onChange(value.filter((_, i) => i !== idx));
